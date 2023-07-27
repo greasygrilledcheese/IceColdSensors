@@ -16,9 +16,8 @@ BUCKET_NAME = "YOUR-BUCKET-NAME-HERE"  # Name of the Initial State bucket
 BUCKET_KEY = "YOUR-BUCKET-KEY-HERE"  # Key for the Initial State bucket
 ACCESS_KEY = "YOUR KEY HERE"  # Your Initial State access key
 MINUTES_BETWEEN_READS = 5  # Time interval between sensor readings in minutes
-
-# Initialize Slack API settings
 SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"  # Replace this with your Slack API token
+
 slack_client = WebClient(token=SLACK_API_TOKEN)  # Create a Slack WebClient instance
 
 # Counter variables for temperature checks
