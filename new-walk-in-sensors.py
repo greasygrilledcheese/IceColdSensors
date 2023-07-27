@@ -9,13 +9,13 @@ from slack_sdk.errors import SlackApiError
 # User Settings - Customize these variables according to your needs
 SENSOR_LOCATION_NAME_1 = "Freezer"  # Name for the first sensor location
 SENSOR_LOCATION_NAME_2 = "Fridge"   # Name for the second sensor location
-BUCKET_NAME = ":snowflake: Walk-in Sensors"  # Name of the Initial State bucket
-BUCKET_KEY = "Walk-Ins"  # Key for the Initial State bucket
-ACCESS_KEY = "Your-Key-Here"  # Your Initial State access key
+BUCKET_NAME = "YOUR-BUCKET-NAME-HERE"  # Name of the Initial State bucket
+BUCKET_KEY = "YOUR-BUCKET-KEY-HERE"  # Key for the Initial State bucket
+ACCESS_KEY = "YOUR KEY HERE"  # Your Initial State access key
 MINUTES_BETWEEN_READS = 5  # Time interval between sensor readings in minutes
 
 # Initialize Slack API settings
-SLACK_API_TOKEN = "your-slack-api-token"  # Replace this with your Slack API token
+SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"  # Replace this with your Slack API token
 slack_client = WebClient(token=SLACK_API_TOKEN)  # Create a Slack WebClient instance
 
 # Counter variables for temperature checks
