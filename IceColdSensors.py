@@ -65,7 +65,7 @@ while True:
     if freezer_above_17_count >= THRESHOLD_COUNT:
         try:
             message_1 = (
-                f"ALERT: {SENSOR_LOCATION_NAME_1} Temperature above 17°F for {freezer_above_17_count} checks!\n"
+                f"ALERT: {SENSOR_LOCATION_NAME_1} Temperature above 17°F for {freezer_above_17_count} consecutive 5 minute intervals\n"
                 f"{SENSOR_LOCATION_NAME_1} Temperature: {temp_f_1:.1f}°F\n"
                 f"{SENSOR_LOCATION_NAME_1} Humidity: {humidity_1}%"
             )
@@ -94,7 +94,7 @@ while True:
     if fridge_above_40_count >= THRESHOLD_COUNT:
         try:
             message_2 = (
-                f"ALERT: {SENSOR_LOCATION_NAME_2} Temperature above 40°F for {fridge_above_40_count} MINUTES_BETWEEN_READS intervals!\n"
+                f"ALERT: {SENSOR_LOCATION_NAME_2} Temperature above 40°F for {fridge_above_40_count} consecutive 5 minute intervals!\n"
                 f"{SENSOR_LOCATION_NAME_2} Temperature: {temp_f_2:.1f}°F\n"
                 f"{SENSOR_LOCATION_NAME_2} Humidity: {humidity_2}%"
             )
