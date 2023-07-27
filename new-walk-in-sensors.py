@@ -21,7 +21,7 @@ slack_client = WebClient(token=SLACK_API_TOKEN)  # Create a Slack WebClient inst
 # Counter variables for temperature checks
 fridge_above_40_count = 0
 freezer_above_17_count = 0
-THRESHOLD_COUNT = 3  # Number of consecutive MINUTES_BETWEEN_READS intervals before sending an alert
+THRESHOLD_COUNT = 4  # Number of consecutive MINUTES_BETWEEN_READS intervals before sending an alert
 
 
 # BME280 settings
@@ -55,7 +55,7 @@ while True:
     streamer_1.log(SENSOR_LOCATION_NAME_1 + " Humidity(%)", humidity_1)  # Log humidity data
     streamer_1.flush()  # Send data to Initial State
 
-    # Check if Freezer is above 17°F for 3 consecutive MINUTES_BETWEEN_READS intervals
+    # Check if Freezer is above 17°F for 4 consecutive MINUTES_BETWEEN_READS intervals
     if temp_f_1 > 17:
         freezer_above_17_count += 1
     else:
@@ -84,7 +84,7 @@ while True:
     streamer_2.log(SENSOR_LOCATION_NAME_2 + " Humidity(%)", humidity_2)  # Log humidity data
     streamer_2.flush()  # Send data to Initial State
 
-    # Check if Fridge is above 40°F for 3 consecutive MINUTES_BETWEEN_READS intervals
+    # Check if Fridge is above 40°F for 4 consecutive MINUTES_BETWEEN_READS intervals
     if temp_f_2 > 40:
         fridge_above_40_count += 1
     else:
