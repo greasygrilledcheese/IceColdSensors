@@ -1,6 +1,6 @@
 # IceColdSensors
 
-# Temperature and Humidity Monitoring System with Slack Integration
+# Temperature and Humidity Monitoring System with InitialState AND Slack Integration
 
 ## Overview
 This Python script is designed to monitor temperature and humidity in two distinct locations, namely a Freezer and a Fridge, using two separate BME280 sensors. These sensors are connected to a single Raspberry Pi using the I2C (Inter-Integrated Circuit) communication protocol. The script collects data from the sensors, logs it to the Initial State cloud service, and sends alerts to a designated Slack channel if certain temperature thresholds are exceeded.
