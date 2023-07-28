@@ -1,7 +1,7 @@
 # IceColdSensors
 
-NOTE: This is highly modified version of the script available in this tutorial:
-https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
+#NOTE: This is highly modified version of the script available in this tutorial:
+#https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
 
 # Temperature and Humidity Monitoring System with InitialState and Slack Integration
 
