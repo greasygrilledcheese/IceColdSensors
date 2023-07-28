@@ -1,7 +1,8 @@
 #This is very modified version of the script available here: 
 #https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
-
-
+#
+#ADDED: Dual sensor functionality, Conversion to Fahrenheit, and Simple Slack notifications
+#
 # Import necessary libraries
 import time
 import smbus2
