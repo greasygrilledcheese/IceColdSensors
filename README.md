@@ -1,7 +1,9 @@
 # IceColdSensors
 
-# This is highly modified version of the script available here: 
+This is highly modified version of the script available in this tutorial: 
 https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
+
+ADDED: Dual sensor functionality, Conversion to Fahrenheit, and Simple Slack notifications
 
 ## Overview
 This Python script is designed to monitor temperature and humidity in two distinct locations, namely a Freezer and a Fridge, using two separate BME280 sensors. These sensors are connected to a single Raspberry Pi using the I2C (Inter-Integrated Circuit) communication protocol. The script collects data from the sensors, logs it to the Initial State cloud service, and sends alerts to a designated Slack channel if certain temperature thresholds are exceeded.
