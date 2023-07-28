@@ -20,7 +20,7 @@ ACCESS_KEY = "YOUR KEY HERE"  # Your Initial State access key
 MINUTES_BETWEEN_READS = 5  # Time interval between sensor readings in minutes
 SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"  # Replace this with your Slack API token
 
-slack_client = WebClient(token=SLACK_API_TOKEN)  # Create a Slack WebClient instance
+
 
 # Counter variables for temperature checks
 fridge_above_40_count = 0
@@ -45,6 +45,8 @@ calibration_params_2 = bme280.load_calibration_params(bus_2, address_2)  # Load 
 streamer_1 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
 streamer_2 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
 
+ # Create a Slack WebClient instance
+slack_client = WebClient(token=SLACK_API_TOKEN) 
 
 # Main loop to continuously read sensor data and perform actions
 while True:
