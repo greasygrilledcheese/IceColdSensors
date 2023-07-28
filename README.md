@@ -31,14 +31,14 @@ The main loop continuously reads data from the two BME280 sensors. It performs t
 ### For Freezer (Sensor 1):
 1. Read temperature and humidity data from the BME280 sensor associated with the Freezer.
 2. Log the collected data to the Initial State bucket associated with the Freezer.
-3. Check if the Freezer temperature is above 17°F for 3 consecutive checks.
+3. Check if the Freezer temperature is above 17°F for 4 consecutive MINUTES_BETWEEN_READS intervals.
 4. If the threshold is met, send an alert message to a specified Slack channel.
 5. Sleep for the specified interval before proceeding to the next iteration.
 
 ### For Fridge (Sensor 2):
 1. Read temperature and humidity data from the BME280 sensor associated with the Fridge.
 2. Log the collected data to the Initial State bucket associated with the Fridge.
-3. Check if the Fridge temperature is above 40°F for 3 consecutive checks.
+3. Check if the Fridge temperature is above 40°F for 4 consecutive MINUTES_BETWEEN_READS intervals.
 4. If the threshold is met, send an alert message to a specified Slack channel.
 5. Sleep for the specified interval before proceeding to the next iteration.
 
