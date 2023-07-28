@@ -1,5 +1,5 @@
 #This is very modified version of the script available here: 
-https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
+#https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
 
 
 # Import necessary libraries
