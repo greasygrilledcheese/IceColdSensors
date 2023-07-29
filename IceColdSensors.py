@@ -1,7 +1,7 @@
 #This is highly modified version of the script available here: 
 #https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
 
-#ADDED: Dual sensor functionality, Conversion to Fahrenheit, and Simple Slack notifications
+#ADDED: Dual sensor functionality, Conversion to Fahrenheit, and Simple Slack notifications with configurable threshold temps and timing
 
 # Import necessary libraries
 import time  # Time-related functions
