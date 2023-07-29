@@ -1,6 +1,6 @@
 # IceColdSensors
 
-This is a modified version of the script available in this tutorial: 
+This is a modified version of the `freezer_monitor.py` script available in this tutorial: 
 [https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd](https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd)
 
 **ADDED**: Dual sensor functionality, Conversion to Fahrenheit, Easily Adjustable Threshold Warnings, and Simple Slack notifications
