@@ -14,7 +14,7 @@ Requirements
 
 Installation
 ------------
-1. Clone the repository or download the script `sensor_data_logger.py` to your local machine.
+1. Clone the repository or download the script `IceColdSensors.py` to your local machine.
 
 2. Install the required Python libraries using pip:
 
@@ -22,9 +22,9 @@ Installation
 
 Configuration
 -------------
-Before running the script, you need to configure the `settings.conf` file. The `settings.conf` file contains various settings required for the script to function correctly. Make sure to fill in the appropriate values for each setting.
+Before running the script, you need to configure the `IceColdSettings.conf` file. The `IceColdSettings.conf` file contains various settings required for the script to function correctly. Make sure to fill in the appropriate values for each setting.
 
-Here's how to configure the `settings.conf` file:
+Here's how to configure the `IceColdSettings.conf` file:
 <code>
 [General]
 SENSOR_LOCATION_NAME_1 = Freezer
@@ -46,11 +46,11 @@ THRESHOLD_COUNT = 3
 
 Usage
 -----
-1. Make sure the settings.conf file is properly filled out with your configurations.
+1. Make sure the IceColdSettings.conf file is properly filled out with your configurations.
 
 2. Run the script using Python:
 
-   python sensor_data_logger.py
+   python IceColdSensors.py
 
 3. The script will continuously read data from the Freezer and Fridge BME280 sensors at the specified interval (MINUTES_BETWEEN_READS). The data will be logged to the Initial State platform.
 
