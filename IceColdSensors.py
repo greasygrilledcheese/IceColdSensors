@@ -30,7 +30,7 @@ SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"
 # Replace this with your Slack channel name
 SLACK_CHANNEL = "YOUR-CHANNEL-NAME-HERE"
 # Replace the following list with the Slack usernames you want to tag
-SLACK_USERS_TO_TAG = ["@username1", "@username2", "@username3"]
+SLACK_USERS_TO_TAG = ["@username1", "@username2", "@username3"] #Remove everything between brackets if no users are to be tagged.
 # Threshold temperature for the Freezer
 FREEZER_THRESHOLD_TEMP = 17
 # Threshold temperature for the Fridge
