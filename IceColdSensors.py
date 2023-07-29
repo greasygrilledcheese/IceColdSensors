@@ -12,21 +12,36 @@ from slack_sdk import WebClient  # Library for interacting with Slack API
 from slack_sdk.errors import SlackApiError  # Error handling for Slack API
 
 # User Settings - Customize these variables according to your needs
-SENSOR_LOCATION_NAME_1 = "Freezer"  # Name for the first sensor location
-SENSOR_LOCATION_NAME_2 = "Fridge"   # Name for the second sensor location
-BUCKET_NAME = "YOUR-BUCKET-NAME-HERE"  # Name of the Initial State bucket
-BUCKET_KEY = "YOUR-BUCKET-KEY-HERE"  # Key for the Initial State bucket
-ACCESS_KEY = "YOUR KEY HERE"  # Your Initial State access key
-MINUTES_BETWEEN_READS = 5  # Time interval between sensor readings in minutes
-SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"  # Replace this with your Slack API token
+
+# Name for the first sensor location (e.g., "Freezer")
+SENSOR_LOCATION_NAME_1 = "Freezer"
+# Name for the second sensor location (e.g., "Fridge")
+SENSOR_LOCATION_NAME_2 = "Fridge"
+
+# Name of the Initial State bucket
+BUCKET_NAME = "YOUR-BUCKET-NAME-HERE"
+# Key for the Initial State bucket
+BUCKET_KEY = "YOUR-BUCKET-KEY-HERE"
+# Your Initial State access key
+ACCESS_KEY = "YOUR KEY HERE"
+# Time interval between sensor readings in minutes
+MINUTES_BETWEEN_READS = 5
+
+# Replace this with your Slack API token
+SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"
+# Replace this with your Slack channel name
 SLACK_CHANNEL = "YOUR-CHANNEL-NAME-HERE"
 
-# Counter variables for temperature checks
-fridge_above_threshold_count = 0
-freezer_above_threshold_count = 0
+# Threshold temperature for the Freezer
 FREEZER_THRESHOLD_TEMP = 17
+# Threshold temperature for the Fridge
 FRIDGE_THRESHOLD_TEMP = 40
-THRESHOLD_COUNT = 4  # Number of consecutive MINUTES_BETWEEN_READS intervals before sending an alert
+# Number of consecutive MINUTES_BETWEEN_READS intervals before sending an alert
+THRESHOLD_COUNT = 4
+
+# Counter variables for temperature checks
+FRIDGE_ABOVE_THRESHOLD_COUNT = 0
+FREEZER_ABOVE_THRESHOLD_COUNT = 0
 
 # Variables to store alert messages
 freezer_alert_message = ""
@@ -65,20 +80,6 @@ while True:
     streamer_1.log(SENSOR_LOCATION_NAME_1 + " Humidity(%)", humidity_1)  # Log humidity data
     streamer_1.flush()  # Send data to Initial State
 
-    # Check if Freezer is above THRESHOLD_TEMP for THRESHOLD_COUNT consecutive MINUTES_BETWEEN_READS intervals
-    if temp_f_1 > FREEZER_WARNING_TEMP:
-        freezer_above_threshold_count += 1
-    else:
-        freezer_above_threshold_count = 0
-
-    # Post Temperature to Slack for Freezer if condition is met
-    if freezer_above_threshold_count >= THRESHOLD_COUNT:
-        freezer_alert_message = (
-            f"ALERT: {SENSOR_LOCATION_NAME_1} Temperature above {FREEZER_THRESHOLD_TEMP} for {freezer_above_threshold_count} consecutive {THRESHOLD_COUNT} minute intervals\n"
-            f"{SENSOR_LOCATION_NAME_1} Temperature: {temp_f_1:.1f}°F\n"
-            f"{SENSOR_LOCATION_NAME_1} Humidity: {humidity_1}%\n"
-        )
-
     # Get Data from Fridge (Sensor 2)
     bme280data_2 = bme280.sample(bus_2, address_2, calibration_params_2)
     humidity_2 = format(bme280data_2.humidity, ".1f")  # Format humidity value with one decimal place
@@ -90,16 +91,30 @@ while True:
     streamer_2.log(SENSOR_LOCATION_NAME_2 + " Humidity(%)", humidity_2)  # Log humidity data
     streamer_2.flush()  # Send data to Initial State
 
-    # Check if Fridge is above 40°F for THRESHOLD_COUNT consecutive MINUTES_BETWEEN_READS intervals
-    if temp_f_2 > FRIDGE_WARNING_TEMP:
-        fridge_above_threshold_count += 1
+    # Check if Freezer is above THRESHOLD_TEMP for THRESHOLD_COUNT consecutive MINUTES_BETWEEN_READS intervals
+    if temp_f_1 > FREEZER_THRESHOLD_TEMP:
+        FREEZER_ABOVE_THRESHOLD_COUNT += 1
     else:
-        fridge_above_threshold_count = 0
+        FREEZER_ABOVE_THRESHOLD_COUNT = 0
+
+    # Post Temperature to Slack for Freezer if condition is met
+    if FREEZER_ABOVE_THRESHOLD_COUNT >= THRESHOLD_COUNT:
+        freezer_alert_message = (
+            f"ALERT: {SENSOR_LOCATION_NAME_1} Temperature above {FREEZER_THRESHOLD_TEMP} for {FREEZER_ABOVE_THRESHOLD_COUNT} consecutive {THRESHOLD_COUNT} minute intervals\n"
+            f"{SENSOR_LOCATION_NAME_1} Temperature: {temp_f_1:.1f}°F\n"
+            f"{SENSOR_LOCATION_NAME_1} Humidity: {humidity_1}%\n"
+        )
+
+    # Check if Fridge is above FRIDGE_THRESHOLD_TEMP for THRESHOLD_COUNT consecutive MINUTES_BETWEEN_READS intervals
+    if temp_f_2 > FRIDGE_THRESHOLD_TEMP:
+        FRIDGE_ABOVE_THRESHOLD_COUNT += 1
+    else:
+        FRIDGE_ABOVE_THRESHOLD_COUNT = 0
 
     # Post Temperature to Slack for Fridge if condition is met
-    if fridge_above_threshold_count >= THRESHOLD_COUNT:
+    if FRIDGE_ABOVE_THRESHOLD_COUNT >= THRESHOLD_COUNT:
         fridge_alert_message = (
-            f"ALERT: {SENSOR_LOCATION_NAME_2} Temperature above {FRIDGE_THRESHOLD_TEMP} for {fridge_above_threshold_count} consecutive {THRESHOLD_COUNT} minute intervals\n"
+            f"ALERT: {SENSOR_LOCATION_NAME_2} Temperature above {FRIDGE_THRESHOLD_TEMP} for {FRIDGE_ABOVE_THRESHOLD_COUNT} consecutive {THRESHOLD_COUNT} minute intervals\n"
             f"{SENSOR_LOCATION_NAME_2} Temperature: {temp_f_2:.1f}°F\n"
             f"{SENSOR_LOCATION_NAME_2} Humidity: {humidity_2}%\n"
         )
