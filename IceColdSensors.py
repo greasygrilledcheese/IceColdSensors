@@ -17,7 +17,6 @@ from slack_sdk.errors import SlackApiError  # Error handling for Slack API
 SENSOR_LOCATION_NAME_1 = "Freezer"
 # Name for the second sensor location (e.g., "Fridge")
 SENSOR_LOCATION_NAME_2 = "Fridge"
-
 # Name of the Initial State bucket
 BUCKET_NAME = "YOUR-BUCKET-NAME-HERE"
 # Key for the Initial State bucket
@@ -26,18 +25,19 @@ BUCKET_KEY = "YOUR-BUCKET-KEY-HERE"
 ACCESS_KEY = "YOUR KEY HERE"
 # Time interval between sensor readings in minutes
 MINUTES_BETWEEN_READS = 5
-
 # Replace this with your Slack API token
 SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"
 # Replace this with your Slack channel name
 SLACK_CHANNEL = "YOUR-CHANNEL-NAME-HERE"
-
+# Replace the following list with the Slack usernames you want to tag
+SLACK_USERS_TO_TAG = ["@username1", "@username2", "@username3"]
 # Threshold temperature for the Freezer
 FREEZER_THRESHOLD_TEMP = 17
 # Threshold temperature for the Fridge
 FRIDGE_THRESHOLD_TEMP = 40
 # Number of consecutive MINUTES_BETWEEN_READS intervals before sending an alert
 THRESHOLD_COUNT = 4
+
 
 # Counter variables for temperature checks
 FRIDGE_ABOVE_THRESHOLD_COUNT = 0
@@ -64,8 +64,6 @@ calibration_params_2 = bme280.load_calibration_params(bus_2, address_2)  # Load 
 streamer_1 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
 streamer_2 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
 
-# Create a Slack WebClient instance
-slack_client = WebClient(token=SLACK_API_TOKEN)
 
 # Main loop to continuously read sensor data and perform actions
 while True:
@@ -121,9 +119,18 @@ while True:
 
     # Send combined Slack message if any of the alerts are triggered
     if freezer_alert_message or fridge_alert_message:
+        # Create a Slack WebClient instance
+        slack_client = WebClient(token=SLACK_API_TOKEN)
         try:
             combined_message = freezer_alert_message + fridge_alert_message
-            slack_client.chat_postMessage(channel=SLACK_CHANNEL, text=combined_message)  # Send Slack message
+
+            # Prepare the list of user IDs to tag in the message
+            tagged_users = " ".join(SLACK_USERS_TO_TAG)
+
+            # Add the tagged users to the beginning of the message
+            combined_message_with_tags = f"{tagged_users} {combined_message}"
+
+            slack_client.chat_postMessage(channel=SLACK_CHANNEL, text=combined_message_with_tags)  # Send Slack message
         except SlackApiError as e:
             print(f"Error posting message to Slack: {e}")  # Handle Slack API errors
 
@@ -133,4 +140,3 @@ while True:
 
     # Sleep for the specified interval before the next iteration
     time.sleep(60 * MINUTES_BETWEEN_READS)
-    
