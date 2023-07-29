@@ -4,12 +4,12 @@
 #ADDED: Dual sensor functionality, Conversion to Fahrenheit, and Simple Slack notifications
 
 # Import necessary libraries
-import time
-import smbus2
-import bme280
-from ISStreamer.Streamer import Streamer
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
+import time  # Time-related functions
+import smbus2  # I2C communication library
+import bme280  # Library to interface with BME280 sensor
+from ISStreamer.Streamer import Streamer  # Library for logging data to Initial State
+from slack_sdk import WebClient  # Library for interacting with Slack API
+from slack_sdk.errors import SlackApiError  # Error handling for Slack API
 
 # User Settings - Customize these variables according to your needs
 SENSOR_LOCATION_NAME_1 = "Freezer"  # Name for the first sensor location
@@ -19,14 +19,18 @@ BUCKET_KEY = "YOUR-BUCKET-KEY-HERE"  # Key for the Initial State bucket
 ACCESS_KEY = "YOUR KEY HERE"  # Your Initial State access key
 MINUTES_BETWEEN_READS = 5  # Time interval between sensor readings in minutes
 SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"  # Replace this with your Slack API token
-
-
+SLACK_CHANNEL = "YOUR-CHANNEL-NAME-HERE"
 
 # Counter variables for temperature checks
-fridge_above_40_count = 0
-freezer_above_17_count = 0
+fridge_above_threshold_count = 0
+freezer_above_threshold_count = 0
+FREEZER_THRESHOLD_TEMP = 17
+FRIDGE_THRESHOLD_TEMP = 40
 THRESHOLD_COUNT = 4  # Number of consecutive MINUTES_BETWEEN_READS intervals before sending an alert
 
+# Variables to store alert messages
+freezer_alert_message = ""
+fridge_alert_message = ""
 
 # BME280 settings
 port = 1  # Raspberry Pi's I2C port number
@@ -45,8 +49,8 @@ calibration_params_2 = bme280.load_calibration_params(bus_2, address_2)  # Load 
 streamer_1 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
 streamer_2 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
 
- # Create a Slack WebClient instance
-slack_client = WebClient(token=SLACK_API_TOKEN) 
+# Create a Slack WebClient instance
+slack_client = WebClient(token=SLACK_API_TOKEN)
 
 # Main loop to continuously read sensor data and perform actions
 while True:
@@ -54,59 +58,63 @@ while True:
     bme280data_1 = bme280.sample(bus_1, address_1, calibration_params_1)
     humidity_1 = format(bme280data_1.humidity, ".1f")  # Format humidity value with one decimal place
     temp_c_1 = bme280data_1.temperature
-    temp_f_1 = (temp_c_1 * 9/5) + 32  # Convert Celsius to Fahrenheit
+    temp_f_1 = (temp_c_1 * 9 / 5) + 32  # Convert Celsius to Fahrenheit
 
     # Log data to Initial State for Sensor 1
     streamer_1.log(SENSOR_LOCATION_NAME_1 + " Temperature(F)", temp_f_1)  # Log temperature data
     streamer_1.log(SENSOR_LOCATION_NAME_1 + " Humidity(%)", humidity_1)  # Log humidity data
     streamer_1.flush()  # Send data to Initial State
 
-    # Check if Freezer is above 17°F for 4 consecutive MINUTES_BETWEEN_READS intervals
-    if temp_f_1 > 17:
-        freezer_above_17_count += 1
+    # Check if Freezer is above THRESHOLD_TEMP for THRESHOLD_COUNT consecutive MINUTES_BETWEEN_READS intervals
+    if temp_f_1 > FREEZER_WARNING_TEMP:
+        freezer_above_threshold_count += 1
     else:
-        freezer_above_17_count = 0
+        freezer_above_threshold_count = 0
 
     # Post Temperature to Slack for Freezer if condition is met
-    if freezer_above_17_count >= THRESHOLD_COUNT:
-        try:
-            message_1 = (
-                f"ALERT: {SENSOR_LOCATION_NAME_1} Temperature above 17°F for {freezer_above_17_count} consecutive 5 minute intervals\n"
-                f"{SENSOR_LOCATION_NAME_1} Temperature: {temp_f_1:.1f}°F\n"
-                f"{SENSOR_LOCATION_NAME_1} Humidity: {humidity_1}%"
-            )
-            slack_client.chat_postMessage(channel="#your-slack-channel", text=message_1)  # Send Slack message
-        except SlackApiError as e:
-            print(f"Error posting message to Slack: {e}")  # Handle Slack API errors
+    if freezer_above_threshold_count >= THRESHOLD_COUNT:
+        freezer_alert_message = (
+            f"ALERT: {SENSOR_LOCATION_NAME_1} Temperature above {FREEZER_THRESHOLD_TEMP} for {freezer_above_threshold_count} consecutive {THRESHOLD_COUNT} minute intervals\n"
+            f"{SENSOR_LOCATION_NAME_1} Temperature: {temp_f_1:.1f}°F\n"
+            f"{SENSOR_LOCATION_NAME_1} Humidity: {humidity_1}%\n"
+        )
 
     # Get Data from Fridge (Sensor 2)
     bme280data_2 = bme280.sample(bus_2, address_2, calibration_params_2)
     humidity_2 = format(bme280data_2.humidity, ".1f")  # Format humidity value with one decimal place
     temp_c_2 = bme280data_2.temperature
-    temp_f_2 = (temp_c_2 * 9/5) + 32  # Convert Celsius to Fahrenheit
+    temp_f_2 = (temp_c_2 * 9 / 5) + 32  # Convert Celsius to Fahrenheit
 
     # Log data to Initial State for Fridge (Sensor 2)
     streamer_2.log(SENSOR_LOCATION_NAME_2 + " Temperature(F)", temp_f_2)  # Log temperature data
     streamer_2.log(SENSOR_LOCATION_NAME_2 + " Humidity(%)", humidity_2)  # Log humidity data
     streamer_2.flush()  # Send data to Initial State
 
-    # Check if Fridge is above 40°F for 4 consecutive MINUTES_BETWEEN_READS intervals
-    if temp_f_2 > 40:
-        fridge_above_40_count += 1
+    # Check if Fridge is above 40°F for THRESHOLD_COUNT consecutive MINUTES_BETWEEN_READS intervals
+    if temp_f_2 > FRIDGE_WARNING_TEMP:
+        fridge_above_threshold_count += 1
     else:
-        fridge_above_40_count = 0
+        fridge_above_threshold_count = 0
 
     # Post Temperature to Slack for Fridge if condition is met
-    if fridge_above_40_count >= THRESHOLD_COUNT:
+    if fridge_above_threshold_count >= THRESHOLD_COUNT:
+        fridge_alert_message = (
+            f"ALERT: {SENSOR_LOCATION_NAME_2} Temperature above {FRIDGE_THRESHOLD_TEMP} for {fridge_above_threshold_count} consecutive {THRESHOLD_COUNT} minute intervals\n"
+            f"{SENSOR_LOCATION_NAME_2} Temperature: {temp_f_2:.1f}°F\n"
+            f"{SENSOR_LOCATION_NAME_2} Humidity: {humidity_2}%\n"
+        )
+
+    # Send combined Slack message if any of the alerts are triggered
+    if freezer_alert_message or fridge_alert_message:
         try:
-            message_2 = (
-                f"ALERT: {SENSOR_LOCATION_NAME_2} Temperature above 40°F for {fridge_above_40_count} consecutive 5 minute intervals!\n"
-                f"{SENSOR_LOCATION_NAME_2} Temperature: {temp_f_2:.1f}°F\n"
-                f"{SENSOR_LOCATION_NAME_2} Humidity: {humidity_2}%"
-            )
-            slack_client.chat_postMessage(channel="#your-slack-channel", text=message_2)  # Send Slack message
+            combined_message = freezer_alert_message + fridge_alert_message
+            slack_client.chat_postMessage(channel=SLACK_CHANNEL, text=combined_message)  # Send Slack message
         except SlackApiError as e:
             print(f"Error posting message to Slack: {e}")  # Handle Slack API errors
+
+        # Reset alert messages
+        freezer_alert_message = ""
+        fridge_alert_message = ""
 
     # Sleep for the specified interval before the next iteration
     time.sleep(60 * MINUTES_BETWEEN_READS)
