@@ -1,9 +1,9 @@
 # IceColdSensors
 
-This is highly modified version of the script available in this tutorial: 
-https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
+This is a highly modified version of the script available in this tutorial: 
+[https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd](https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd)
 
-ADDED: Dual sensor functionality, Conversion to Fahrenheit, and Simple Slack notifications
+**ADDED**: Dual sensor functionality, Conversion to Fahrenheit, and Simple Slack notifications
 
 ## Overview
 This Python script is designed to monitor temperature and humidity in two distinct locations, namely a Freezer and a Fridge, using two separate BME280 sensors. These sensors are connected to a single Raspberry Pi using the I2C (Inter-Integrated Circuit) communication protocol. The script collects data from the sensors, logs it to the Initial State cloud service, and sends alerts to a designated Slack channel if certain temperature thresholds are exceeded.
@@ -53,4 +53,4 @@ The main loop continuously reads data from the two BME280 sensors. It performs t
 7. Main loop for continuous monitoring and data logging.
 
 ## Running the Script
-Before running the script, ensure you have replaced the placeholder values such as `"Your-Key-Here"` and `"your-slack-api-token"`and `"Your-slack-channel"` with appropriate access keys and tokens. This script can be executed on a Raspberry Pi or any other suitable platform with I2C support to monitor the temperature and humidity of the Freezer and Fridge locations. The data is then logged to Initial State, and alerts are sent to the designated Slack channel if certain temperature thresholds are exceeded for a defined number of consecutive readings.
+Before running the script, ensure you have replaced the placeholder values such as `"Your-Key-Here"` and `"your-slack-api-token"` and `"Your-slack-channel"` with appropriate access keys and tokens. This script can be executed on a Raspberry Pi or any other suitable platform with I2C support to monitor the temperature and humidity of the Freezer and Fridge locations. The data is then logged to Initial State, and alerts are sent to the designated Slack channel if certain temperature thresholds are exceeded for a defined number of consecutive readings.
