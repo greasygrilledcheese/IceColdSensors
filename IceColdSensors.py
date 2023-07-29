@@ -28,8 +28,8 @@ def read_settings_from_conf(conf_file):
 
     return settings
 
-# Read the settings from the .conf file
-settings = read_settings_from_conf('settings.conf')
+# Read the  from the .conf file
+settings = read_settings_from_conf('IceColdSettings.conf')
 
 # User Settings - Customize these variables according to your needs
 SENSOR_LOCATION_NAME_1 = settings['SENSOR_LOCATION_NAME_1']
