@@ -1,56 +1,64 @@
-# IceColdSensors
+ICECOLDSENSORS
+--------------------------------------
 
-This is a modified version of the `freezer_monitor.py` script available in this tutorial: 
-[https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd](https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd)
+Requirements
+------------
+- Python 3.x
+- Required Python libraries:
+  - time
+  - smbus2
+  - bme280
+  - ISStreamer
+  - slack_sdk
+  - configparser
 
-**ADDED**: Dual sensor functionality, Conversion to Fahrenheit, Easily Adjustable Threshold Warnings, and Simple Slack notifications
+Installation
+------------
+1. Clone the repository or download the script `sensor_data_logger.py` to your local machine.
 
-## Overview
-This Python script is designed to monitor temperature and humidity in two distinct locations, namely a Freezer and a Fridge, using two separate BME280 sensors. These sensors are connected to a single Raspberry Pi using the I2C (Inter-Integrated Circuit) communication protocol. The script collects data from the sensors, logs it to the Initial State cloud service, and sends alerts to a designated Slack channel if certain temperature thresholds are exceeded.
+2. Install the required Python libraries using pip:
 
-## Requirements
-To run this script, you need the following:
-- Python with necessary libraries: `time`, `smbus2`, `bme280`, `ISStreamer`, `slack_sdk`
-- Access to the Initial State cloud service
-- A Slack API token for posting messages to a Slack channel
+   `pip install smbus2 bme280-pi slack_sdk configparser`
 
-## Setup
-1. Import the necessary libraries required for the script to function.
-2. Define user settings that will be used in the script, such as sensor names, Initial State bucket details, access key, and time interval between sensor readings.
-3. Initialize Slack API settings by providing your Slack API token.
+Configuration
+-------------
+Before running the script, you need to configure the `settings.conf` file. The `settings.conf` file contains various settings required for the script to function correctly. Make sure to fill in the appropriate values for each setting.
 
-## I2C and BME280 Setup
-Two BME280 sensors are connected to the Raspberry Pi using the I2C communication protocol. I2C is a widely used serial communication protocol that allows multiple devices to communicate with each other over a shared bus. The Raspberry Pi acts as the master on the I2C bus, while the BME280 sensors act as slaves. Each sensor is configured with a unique I2C address.
+Here's how to configure the `settings.conf` file:
+<code>
+[General]
+SENSOR_LOCATION_NAME_1 = Freezer
+SENSOR_LOCATION_NAME_2 = Fridge
+BUCKET_NAME = your_initial_state_bucket_name
+BUCKET_KEY = your_initial_state_bucket_key
+ACCESS_KEY = your_initial_state_access_key
+MINUTES_BETWEEN_READS = 5
+SLACK_API_TOKEN = your_slack_api_token
+SLACK_CHANNEL = your_slack_channel_name
+SLACK_USERS_TO_TAG = slack_user_id1 slack_user_id2
+FREEZER_THRESHOLD_TEMP = 17
+FRIDGE_THRESHOLD_TEMP = 40
+THRESHOLD_COUNT = 3
+</code>
+- Replace your_initial_state_bucket_name, your_initial_state_bucket_key, and your_initial_state_access_key with your Initial State credentials.
+- Replace your_slack_api_token with your Slack API token and your_slack_channel_name with the desired Slack channel to post alerts.
+- Add the Slack user IDs (space-separated) of users you want to tag when an alert is triggered.
 
-- The first BME280 sensor, associated with the Freezer, is configured with the I2C address 0x77.
-- The second BME280 sensor, corresponding to the Fridge, is configured with the I2C address 0x76.
+Usage
+-----
+1. Make sure the settings.conf file is properly filled out with your configurations.
 
-## Main Loop
-The main loop continuously reads data from the two BME280 sensors. It performs the following steps for each sensor:
+2. Run the script using Python:
 
-### For Freezer (Sensor 1):
-1. Read temperature and humidity data from the BME280 sensor associated with the Freezer.
-2. Log the collected data to the Initial State bucket associated with the Freezer.
-3. Check if the Freezer temperature is above 17°F for 4 consecutive MINUTES_BETWEEN_READS intervals.
-4. If the threshold is met, send an alert message to a specified Slack channel.
-5. Sleep for the specified interval before proceeding to the next iteration.
+   python sensor_data_logger.py
 
-### For Fridge (Sensor 2):
-1. Read temperature and humidity data from the BME280 sensor associated with the Fridge.
-2. Log the collected data to the Initial State bucket associated with the Fridge.
-3. Check if the Fridge temperature is above 40°F for 4 consecutive MINUTES_BETWEEN_READS intervals.
-4. If the threshold is met, send an alert message to a specified Slack channel.
-5. Sleep for the specified interval before proceeding to the next iteration.
+3. The script will continuously read data from the Freezer and Fridge BME280 sensors at the specified interval (MINUTES_BETWEEN_READS). The data will be logged to the Initial State platform.
 
-## Functionality Breakdown
+4. If the temperature in the Freezer or Fridge exceeds the predefined thresholds (FREEZER_THRESHOLD_TEMP and FRIDGE_THRESHOLD_TEMP) for a specified number of consecutive readings (THRESHOLD_COUNT), a Slack alert will be triggered, and the specified users will be tagged.
 
-1. Import necessary libraries and modules.
-2. User Settings - Customize these variables according to your needs.
-3. Initialize Slack API settings.
-4. Counter variables for temperature checks and the threshold count.
-5. BME280 sensor settings for Freezer and Fridge.
-6. Initialize the Initial State streamer objects for each sensor.
-7. Main loop for continuous monitoring and data logging.
+5. The script will keep running until manually stopped (e.g., using Ctrl+C).
 
-## Running the Script
-Before running the script, ensure you have replaced the placeholder values such as `"Your-Key-Here"` and `"your-slack-api-token"` and `"Your-slack-channel"` with appropriate access keys and tokens. This script can be executed on a Raspberry Pi or any other suitable platform with I2C support to monitor the temperature and humidity of the Freezer and Fridge locations. The data is then logged to Initial State, and alerts are sent to the designated Slack channel if certain temperature thresholds are exceeded for a defined number of consecutive readings.
+----
+Note
+----
+Ensure that the I2C addresses of the BME280 sensors (0x77 for Freezer and 0x76 for Fridge) are correctly configured in the script and match the actual sensor addresses.
