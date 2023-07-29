@@ -1,0 +1,50 @@
+h3>Step 5: Main Loop and Data Logging</h3>
+<p>1. The Python script contains a main loop that continuously reads data from the two BME280 sensors and performs the following actions:</p>
+<pre><code>
+    # Get Data from Freezer (Sensor 1)
+    bme280data_1 = bme280.sample(bus_1, address_1, calibration_params_1)
+    humidity_1 = format(bme280data_1.humidity, ".1f")  # Format humidity value with one decimal place
+    temp_c_1 = bme280data_1.temperature
+    temp_f_1 = (temp_c_1 * 9 / 5) + 32  # Convert Celsius to Fahrenheit
+
+    # Log data to Initial State for Sensor 1
+    streamer_1.log(SENSOR_LOCATION_NAME_1 + " Temperature(F)", temp_f_1)  # Log temperature data
+    streamer_1.log(SENSOR_LOCATION_NAME_1 + " Humidity(%)", humidity_1)  # Log humidity data
+    streamer_1.flush()  # Send data to Initial State
+
+    # Get Data from Fridge (Sensor 2)
+    bme280data_2 = bme280.sample(bus_2, address_2, calibration_params_2)
+    humidity_2 = format(bme280data_2.humidity, ".1f")  # Format humidity value with one decimal place
+    temp_c_2 = bme280data_2.temperature
+    temp_f_2 = (temp_c_2 * 9 / 5) + 32  # Convert Celsius to Fahrenheit
+
+    # Log data to Initial State for Fridge (Sensor 2)
+    streamer_2.log(SENSOR_LOCATION_NAME_2 + " Temperature(F)", temp_f_2)  # Log temperature data
+    streamer_2.log(SENSOR_LOCATION_NAME_2 + " Humidity(%)", humidity_2)  # Log humidity data
+    streamer_2.flush()  # Send data to Initial State
+</code></pre>
+<p>2. The script checks if the temperature of the Freezer and Fridge exceeds the defined thresholds for a specified number of consecutive intervals. If the thresholds are exceeded, it sends an alert message to the specified Slack channel:</p>
+<pre><code>
+    if temp_f_1 > FREEZER_THRESHOLD_TEMP:
+        FREEZER_ABOVE_THRESHOLD_COUNT += 1
+    else:
+        FREEZER_ABOVE_THRESHOLD_COUNT = 0
+
+    # Post Temperature to Slack for Freezer if condition is met
+    if FREEZER_ABOVE_THRESHOLD_COUNT >= THRESHOLD_COUNT:
+        freezer_alert_message = (
+            f"ALERT: {SENSOR_LOCATION_NAME_1} Temperature above {FREEZER_THRESHOLD_TEMP} for {FREEZER_ABOVE_THRESHOLD_COUNT} consecutive {THRESHOLD_COUNT} minute intervals\n"
+            f"{SENSOR_LOCATION_NAME_1} Temperature: {temp_f_1:.1f}°F\n"
+            f"{SENSOR_LOCATION_NAME_1} Humidity: {humidity_1}%\n"
+        )
+</code></pre>
+
+<h3>Step 6: Running the Script</h3>
+<p>Before running the script, ensure you have replaced the placeholder values such as "YOUR-KEY-HERE," "YOUR-SLACK-API-TOKEN-HERE," and "YOUR-SLACK-CHANNEL-HERE" with appropriate access keys and tokens.</p>
+<p>This script can be executed on a Raspberry Pi or any other suitable platform with I2C support to monitor the temperature and humidity of the Freezer and Fridge locations. The data is then logged to Initial State, and alerts are sent to the designated Slack channel if certain temperature thresholds are exceeded for a defined number of consecutive readings.</p>
+
+<h3>Conclusion</h3>
+<p>By following these steps, you can set up a Raspberry Pi with two BME280 sensors to monitor temperature and humidity in different locations. The Python script enables you to log the data to the cloud and receive alerts, making it a useful tool for environmental monitoring and control. You can further enhance this project by adding additional sensors or integrating other cloud platforms for data visualization and analysis.</p>
+<p>With this setup, you can keep track of the temperature and humidity of your Freezer and Fridge, ensuring that they are within the desired range and taking appropriate actions if any issues arise.</p>
+</body>
+</html>
