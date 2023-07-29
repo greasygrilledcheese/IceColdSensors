@@ -1,8 +1,3 @@
-#This is a modified version of the `freezer_monitor.py` script available in this tutorial: 
-#https://medium.com/initial-state/how-to-build-a-raspberry-pi-refrigerator-freezer-monitor-f7a91075c2fd
-
-#ADDED: Dual sensor functionality, Conversion to Fahrenheit, Slack integration with configurable threshold temps and times
-
 # Import necessary libraries
 import time  # Time-related functions
 import smbus2  # I2C communication library
@@ -10,42 +5,45 @@ import bme280  # Library to interface with BME280 sensor
 from ISStreamer.Streamer import Streamer  # Library for logging data to Initial State
 from slack_sdk import WebClient  # Library for interacting with Slack API
 from slack_sdk.errors import SlackApiError  # Error handling for Slack API
+import configparser
+
+# Function to read settings from the .conf file
+def read_settings_from_conf(conf_file):
+    config = configparser.ConfigParser()
+    config.read(conf_file)
+
+    settings = {}
+    settings['SENSOR_LOCATION_NAME_1'] = config.get('General', 'SENSOR_LOCATION_NAME_1')
+    settings['SENSOR_LOCATION_NAME_2'] = config.get('General', 'SENSOR_LOCATION_NAME_2')
+    settings['BUCKET_NAME'] = config.get('General', 'BUCKET_NAME')
+    settings['BUCKET_KEY'] = config.get('General', 'BUCKET_KEY')
+    settings['ACCESS_KEY'] = config.get('General', 'ACCESS_KEY')
+    settings['MINUTES_BETWEEN_READS'] = config.getint('General', 'MINUTES_BETWEEN_READS')
+    settings['SLACK_API_TOKEN'] = config.get('General', 'SLACK_API_TOKEN')
+    settings['SLACK_CHANNEL'] = config.get('General', 'SLACK_CHANNEL')
+    settings['SLACK_USERS_TO_TAG'] = config.get('General', 'SLACK_USERS_TO_TAG').split()
+    settings['FREEZER_THRESHOLD_TEMP'] = config.getfloat('General', 'FREEZER_THRESHOLD_TEMP')
+    settings['FRIDGE_THRESHOLD_TEMP'] = config.getfloat('General', 'FRIDGE_THRESHOLD_TEMP')
+    settings['THRESHOLD_COUNT'] = config.getint('General', 'THRESHOLD_COUNT')
+
+    return settings
+
+# Read the settings from the .conf file
+settings = read_settings_from_conf('settings.conf')
 
 # User Settings - Customize these variables according to your needs
-
-# Name for the first sensor location (e.g., "Freezer")
-SENSOR_LOCATION_NAME_1 = "Freezer"
-# Name for the second sensor location (e.g., "Fridge")
-SENSOR_LOCATION_NAME_2 = "Fridge"
-# Name of the Initial State bucket
-BUCKET_NAME = "YOUR-BUCKET-NAME-HERE"
-# Key for the Initial State bucket
-BUCKET_KEY = "YOUR-BUCKET-KEY-HERE"
-# Your Initial State access key
-ACCESS_KEY = "YOUR KEY HERE"
-# Time interval between sensor readings in minutes
-MINUTES_BETWEEN_READS = 5
-# Replace this with your Slack API token
-SLACK_API_TOKEN = "YOUR-SLACK-API-TOKEN-HERE"
-# Replace this with your Slack channel name
-SLACK_CHANNEL = "YOUR-CHANNEL-NAME-HERE"
-# Replace the following list with the Slack usernames you want to tag
-SLACK_USERS_TO_TAG = ["@username1", "@username2", "@username3"] #Remove everything between brackets if no users are to be tagged.
-# Threshold temperature for the Freezer
-FREEZER_THRESHOLD_TEMP = 17
-# Threshold temperature for the Fridge
-FRIDGE_THRESHOLD_TEMP = 40
-# Number of consecutive MINUTES_BETWEEN_READS intervals before sending an alert
-THRESHOLD_COUNT = 4
-
-
-# Counter variables for temperature checks
-FRIDGE_ABOVE_THRESHOLD_COUNT = 0
-FREEZER_ABOVE_THRESHOLD_COUNT = 0
-
-# Variables to store alert messages
-freezer_alert_message = ""
-fridge_alert_message = ""
+SENSOR_LOCATION_NAME_1 = settings['SENSOR_LOCATION_NAME_1']
+SENSOR_LOCATION_NAME_2 = settings['SENSOR_LOCATION_NAME_2']
+BUCKET_NAME = settings['BUCKET_NAME']
+BUCKET_KEY = settings['BUCKET_KEY']
+ACCESS_KEY = settings['ACCESS_KEY']
+MINUTES_BETWEEN_READS = settings['MINUTES_BETWEEN_READS']
+SLACK_API_TOKEN = settings['SLACK_API_TOKEN']
+SLACK_CHANNEL = settings['SLACK_CHANNEL']
+SLACK_USERS_TO_TAG = settings['SLACK_USERS_TO_TAG']
+FREEZER_THRESHOLD_TEMP = settings['FREEZER_THRESHOLD_TEMP']
+FRIDGE_THRESHOLD_TEMP = settings['FRIDGE_THRESHOLD_TEMP']
+THRESHOLD_COUNT = settings['THRESHOLD_COUNT']
 
 # BME280 settings
 port = 1  # Raspberry Pi's I2C port number
@@ -63,7 +61,6 @@ calibration_params_2 = bme280.load_calibration_params(bus_2, address_2)  # Load 
 # Initialize the Initial State streamer objects for each sensor
 streamer_1 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
 streamer_2 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
-
 
 # Main loop to continuously read sensor data and perform actions
 while True:
