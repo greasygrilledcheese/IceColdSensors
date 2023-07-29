@@ -45,6 +45,10 @@ FREEZER_THRESHOLD_TEMP = settings['FREEZER_THRESHOLD_TEMP']
 FRIDGE_THRESHOLD_TEMP = settings['FRIDGE_THRESHOLD_TEMP']
 THRESHOLD_COUNT = settings['THRESHOLD_COUNT']
 
+# Counter variables for temperature checks
+FRIDGE_ABOVE_THRESHOLD_COUNT = 0
+FREEZER_ABOVE_THRESHOLD_COUNT = 0
+
 # BME280 settings
 port = 1  # Raspberry Pi's I2C port number
 
