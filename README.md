@@ -1,5 +1,6 @@
 ICECOLDSENSORS
 --------------------------------------
+Detailed instructions [HERE](https://sethmorrow.com/sensors/)
 
 Requirements
 ------------
