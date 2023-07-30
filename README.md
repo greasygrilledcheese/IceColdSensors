@@ -2,62 +2,45 @@ ICECOLDSENSORS - IoT Temperature Monitoring and Alert System with Raspberry Pi, 
 --------------------------------------
 Detailed instructions [HERE](https://sethmorrow.com/sensors/)
 
-Requirements
-------------
-- Python 3.x
-- Required Python libraries:
-  - time
-  - smbus2
-  - bme280
-  - ISStreamer
-  - slack_sdk
-  - configparser
+# Python Script for Monitoring Fridge and Freezer Temperatures
 
-Installation
-------------
-1. Clone the repository or download the script `IceColdSensors.py` to your local machine.
+This script reads temperature and humidity data from BME280 sensors connected to a Raspberry Pi. The data is then logged to Initial State and checked against predefined thresholds. If the temperature of either the fridge or freezer exceeds its threshold for a certain number of consecutive readings, an alert message is sent to a specified Slack channel.
 
-2. Install the required Python libraries using pip:
+## Requirements
 
-   `pip install smbus2 bme280-pi slack_sdk configparser time ISStreamer`
+1. **Hardware:** The BME280 sensors must be properly connected to the Raspberry Pi's I2C port and should be reachable at the I2C addresses `0x77` and `0x76`.
+2. **Python Libraries:** The following Python libraries must be installed:
+   - `smbus2`
+   - `bme280`
+   - `ISStreamer.Streamer`
+   - `slack_sdk`
+   - `configparser`
+   - `time` (standard library)
+3. **Initial State Service:** You must have access to the Initial State service for data logging, and a valid bucket to log data to.
+4. **API Tokens & Channel Names:** The API tokens and channel names for Initial State and Slack must be correctly configured in the `.conf` file.
+5. **Script Permissions:** The script must have the necessary permissions to access these services.
 
-Configuration
--------------
-Before running the script, you need to configure the `IceColdSettings.conf` file. The `IceColdSettings.conf` file contains various settings required for the script to function correctly. Make sure to fill in the appropriate values for each setting.
+## Configuration
 
-Here's how to configure the `IceColdSettings.conf` file:
-<code>
-[General]
-SENSOR_LOCATION_NAME_1 = Freezer
-SENSOR_LOCATION_NAME_2 = Fridge
-BUCKET_NAME = your_initial_state_bucket_name
-BUCKET_KEY = your_initial_state_bucket_key
-ACCESS_KEY = your_initial_state_access_key
-MINUTES_BETWEEN_READS = 5
-SLACK_API_TOKEN = your_slack_api_token
-SLACK_CHANNEL = your_slack_channel_name
-SLACK_USERS_TO_TAG = slack_user_id1 slack_user_id2
-FREEZER_THRESHOLD_TEMP = 17
-FRIDGE_THRESHOLD_TEMP = 40
-THRESHOLD_COUNT = 3
-</code>
-- Replace your_initial_state_bucket_name, your_initial_state_bucket_key, and your_initial_state_access_key with your Initial State credentials.
-- Replace your_slack_api_token with your Slack API token and your_slack_channel_name with the desired Slack channel to post alerts.
-- Add the Slack user IDs (space-separated) of users you want to tag when an alert is triggered.
+The script reads settings from a `.conf` file named `IceColdSettings.conf`. This file should include the following keys under a `[General]` section:
 
-Usage
------
-1. Make sure the IceColdSettings.conf file is properly filled out with your configurations.
+- `SENSOR_LOCATION_NAME_1`: The name of the location of the first sensor.
+- `SENSOR_LOCATION_NAME_2`: The name of the location of the second sensor.
+- `BUCKET_NAME`: The name of the Initial State bucket where the data is logged.
+- `BUCKET_KEY`: The key of the Initial State bucket.
+- `ACCESS_KEY`: The access key for Initial State.
+- `MINUTES_BETWEEN_READS`: The number of minutes to wait between sensor readings.
+- `SLACK_API_TOKEN`: The API token for Slack.
+- `SLACK_CHANNEL`: The Slack channel where alert messages are sent.
+- `SLACK_USERS_TO_TAG`: A space-separated list of Slack user IDs to tag in alert messages.
+- `FREEZER_THRESHOLD_TEMP`: The temperature threshold for the freezer.
+- `FRIDGE_THRESHOLD_TEMP`: The temperature threshold for the fridge.
+- `THRESHOLD_COUNT`: The number of consecutive readings above the threshold that triggers an alert.
 
-2. Run the script using Python:
+## Execution
 
-   python IceColdSensors.py
+Run the script using a Python 3 interpreter. The script will read data from the sensors, log the data to Initial State, and check if the temperature is above the threshold. If the temperature is above the threshold for a specified number of consecutive readings, an alert message will be sent to Slack.
 
-3. The script will continuously read data from the Freezer and Fridge BME280 sensors at the specified interval (MINUTES_BETWEEN_READS). The data will be logged to the Initial State platform.
-
-4. If the temperature in the Freezer or Fridge exceeds the predefined thresholds (FREEZER_THRESHOLD_TEMP and FRIDGE_THRESHOLD_TEMP) for a specified number of consecutive readings (THRESHOLD_COUNT), a Slack alert will be triggered, and the specified users will be tagged.
-
-5. The script will keep running until manually stopped (e.g., using Ctrl+C).
 
 ----
 Note
