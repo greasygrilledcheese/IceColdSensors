@@ -1,4 +1,4 @@
-ICECOLDSENSORS -IoT Temperature Monitoring and Alert System with Raspberry Pi, BME280 Sensors, Initial State, and Slack Integration
+ICECOLDSENSORS - IoT Temperature Monitoring and Alert System with Raspberry Pi, BME280 Sensors, Initial State, and Slack Integration
 --------------------------------------
 Detailed instructions [HERE](https://sethmorrow.com/sensors/)
 
