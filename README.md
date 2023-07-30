@@ -19,7 +19,7 @@ Installation
 
 2. Install the required Python libraries using pip:
 
-   `pip install smbus2 bme280-pi slack_sdk configparser`
+   `pip install smbus2 bme280-pi slack_sdk configparser time ISStreamer`
 
 Configuration
 -------------
