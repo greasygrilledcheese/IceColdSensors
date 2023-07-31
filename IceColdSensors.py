@@ -48,6 +48,8 @@ THRESHOLD_COUNT = settings['THRESHOLD_COUNT']
 # Counter variables for temperature checks
 FRIDGE_ABOVE_THRESHOLD_COUNT = 0
 FREEZER_ABOVE_THRESHOLD_COUNT = 0
+fridge_alert_message = ""
+freezer_alert_message = ""
 
 # BME280 settings
 port = 1  # Raspberry Pi's I2C port number
