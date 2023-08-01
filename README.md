@@ -2,7 +2,8 @@ ICECOLDSENSORS - IoT Temperature Monitoring and Alert System with Raspberry Pi, 
 --------------------------------------
 Detailed instructions [HERE](https://sethmorrow.com/sensors/)
 
-⚠️ Notice: The Slack tagged users functionality is currently experiencing issues and is not functioning as expected. For the time being, it is advised to leave the "Tag User" fields blank until the problem is resolved. We are actively investigating and will update as soon as it's fixed. Thank you for your patience!
+⚠️ Notice: The Slack tagged users functionality is currently experiencing issues and is not functioning as expected. For the time being, please leave the line related to tagged users in the config file blank until the problem is resolved. We are actively investigating and will update as soon as it's fixed. Thank you for your patience!
+
 # Python Script for Monitoring Fridge and Freezer Temperatures
 
 This script reads temperature and humidity data from BME280 sensors connected to a Raspberry Pi. The data is then logged to Initial State and checked against predefined thresholds. If the temperature of either the fridge or freezer exceeds its threshold for a certain number of consecutive readings, an alert message is sent to a specified Slack channel.
