@@ -3,6 +3,7 @@ import http.server  # For creating the HTTP server.
 import socketserver  # Handling socket-level operations for the server.
 import configparser  # To read and write configuration settings.
 from urllib.parse import parse_qs  # To parse POST data.
+import os  # For invoking system commands.
 
 # Define constants.
 PORT = 8080  # Port on which the server will listen.
@@ -54,6 +55,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(302)
             self.send_header('Location', '/')
             self.end_headers()
+
+            # Reboot the Raspberry Pi after a short delay.
+            os.system("sleep 5 && sudo reboot")
         else:
             # If the path isn't "/update", send a 404 not found response.
             self.send_response(404)
