@@ -1,145 +1,162 @@
 # Import necessary libraries
-import time  # Time-related functions
-import smbus2  # I2C communication library
-import bme280  # Library to interface with BME280 sensor
-from ISStreamer.Streamer import Streamer  # Library for logging data to Initial State
-from slack_sdk import WebClient  # Library for interacting with Slack API
-from slack_sdk.errors import SlackApiError  # Error handling for Slack API
+
+# Streamer is for logging data to Initial State platform
+from ISStreamer.Streamer import Streamer
+
+# smbus2 and bme280 libraries facilitate communication with the BME280 sensor over I2C.
+import smbus2
+import bme280
+
+# slack_sdk is used for sending messages to Slack.
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+
+# configparser helps in parsing the configuration file that holds various settings.
 import configparser
 
-# Function to read settings from the .conf file
+# logging library provides a way to log messages (like errors or information). 
+# time library helps in introducing pauses in the program.
+import logging
+import time
+
+# Define the path of the configuration file.
+CONFIG_FILE = 'IceColdSettings.conf'
+
 def read_settings_from_conf(conf_file):
+    """Reads configuration settings from the provided file and returns them as a dictionary."""
+    # Instantiate a ConfigParser object
     config = configparser.ConfigParser()
+    # Read the configuration from the given file
     config.read(conf_file)
 
-    settings = {}
-    settings['SENSOR_LOCATION_NAME_1'] = config.get('General', 'SENSOR_LOCATION_NAME_1')
-    settings['SENSOR_LOCATION_NAME_2'] = config.get('General', 'SENSOR_LOCATION_NAME_2')
-    settings['BUCKET_NAME'] = config.get('General', 'BUCKET_NAME')
-    settings['BUCKET_KEY'] = config.get('General', 'BUCKET_KEY')
-    settings['ACCESS_KEY'] = config.get('General', 'ACCESS_KEY')
-    settings['MINUTES_BETWEEN_READS'] = config.getint('General', 'MINUTES_BETWEEN_READS')
-    settings['SLACK_API_TOKEN'] = config.get('General', 'SLACK_API_TOKEN')
-    settings['SLACK_CHANNEL'] = config.get('General', 'SLACK_CHANNEL')
-    settings['SLACK_USERS_TO_TAG'] = config.get('General', 'SLACK_USERS_TO_TAG').split()
-    settings['FREEZER_THRESHOLD_TEMP'] = config.getfloat('General', 'FREEZER_THRESHOLD_TEMP')
-    settings['FRIDGE_THRESHOLD_TEMP'] = config.getfloat('General', 'FRIDGE_THRESHOLD_TEMP')
-    settings['THRESHOLD_COUNT'] = config.getint('General', 'THRESHOLD_COUNT')
+    # List of keys that are expected to be present in the configuration file
+    required_keys = [
+        'SENSOR_LOCATION_NAME_1', 'SENSOR_LOCATION_NAME_2', 'BUCKET_NAME',
+        'BUCKET_KEY', 'ACCESS_KEY', 'MINUTES_BETWEEN_READS', 'SLACK_API_TOKEN',
+        'SLACK_CHANNEL', 'SLACK_USERS_TO_TAG', 'FREEZER_THRESHOLD_TEMP',
+        'FRIDGE_THRESHOLD_TEMP', 'THRESHOLD_COUNT', 'BUS_1', 'BUS_1_ADDRESS', 'BUS_2', 'BUS_2_ADDRESS'
+    ]
 
-    return settings
+    # Check if each required key is present in the configuration
+    for key in required_keys:
+        if key not in config['General']:
+            # Log the error and raise an exception if a key is missing
+            logging.error(f"Key {key} missing in the configuration file.")
+            raise KeyError(f"Key {key} missing in the configuration file.")
+    
+    # Convert comma-separated string of slack users into a list
+    config['General']['SLACK_USERS_TO_TAG'] = config.get('General', 'SLACK_USERS_TO_TAG').split(',')
 
-# Read the  from the .conf file
-settings = read_settings_from_conf('IceColdSettings.conf')
+    # Return the parsed settings as a dictionary
+    return {key: config.get('General', key) for key in required_keys}
 
-# User Settings - Customize these variables according to your needs
-SENSOR_LOCATION_NAME_1 = settings['SENSOR_LOCATION_NAME_1']
-SENSOR_LOCATION_NAME_2 = settings['SENSOR_LOCATION_NAME_2']
-BUCKET_NAME = settings['BUCKET_NAME']
-BUCKET_KEY = settings['BUCKET_KEY']
-ACCESS_KEY = settings['ACCESS_KEY']
-MINUTES_BETWEEN_READS = settings['MINUTES_BETWEEN_READS']
-SLACK_API_TOKEN = settings['SLACK_API_TOKEN']
-SLACK_CHANNEL = settings['SLACK_CHANNEL']
-SLACK_USERS_TO_TAG = settings['SLACK_USERS_TO_TAG']
-FREEZER_THRESHOLD_TEMP = settings['FREEZER_THRESHOLD_TEMP']
-FRIDGE_THRESHOLD_TEMP = settings['FRIDGE_THRESHOLD_TEMP']
-THRESHOLD_COUNT = settings['THRESHOLD_COUNT']
+def read_and_log_sensor(bus_num, address, calibration_params, sensor_name, streamer):
+    """Reads data from the BME280 sensor and logs it."""
+    # Initialize the I2C bus using the specified bus number
+    bus = smbus2.SMBus(int(bus_num))
+    try:
+        # Sample data from the BME280 sensor using the given calibration parameters
+        bme280data = bme280.sample(bus, address, calibration_params)
+        # Format humidity to one decimal place
+        humidity = format(bme280data.humidity, ".1f")
+        # Convert Celsius temperature reading to Fahrenheit
+        temp_c = bme280data.temperature
+        temp_f = (temp_c * 9 / 5) + 32
+        # Log the readings to Initial State
+        streamer.log(f"{sensor_name} Temperature(F)", temp_f)
+        streamer.log(f"{sensor_name} Humidity(%)", humidity)
+        streamer.flush()  # Ensure data is sent to Initial State immediately
+        # Log the sensor readings to the console or log file
+        logging.info(f"{sensor_name} - Temperature: {temp_f}°F, Humidity: {humidity}%")
+        return temp_f, humidity
+    except Exception as e:
+        # If there's any error during reading or logging, log the error and return None values
+        logging.error(f"Error reading or logging data: {e}")
+        return None, None
+    finally:
+        # Close the I2C bus connection
+        bus.close()
 
-# Counter variables for temperature checks
-FRIDGE_ABOVE_THRESHOLD_COUNT = 0
-FREEZER_ABOVE_THRESHOLD_COUNT = 0
-fridge_alert_message = ""
-freezer_alert_message = ""
+def check_threshold(temp, threshold_temp, sensor_name, alert_sent, above_threshold_count, settings):
+    """Checks if the temperature exceeds the threshold and returns updated alert and count states."""
+    # If there's no temperature reading, return current states
+    if temp is None:
+        return alert_sent, above_threshold_count, ""
 
-# BME280 settings
-port = 1  # Raspberry Pi's I2C port number
+    # Initialize alert_message as an empty string
+    alert_message = ""
+    # Check if the temperature reading exceeds the threshold
+    if temp > threshold_temp:
+        above_threshold_count += 1
+        # If readings have exceeded threshold for a certain consecutive count and no alert has been sent yet, send an alert
+        if above_threshold_count >= int(settings['THRESHOLD_COUNT']) and not alert_sent:
+            alert_message = f"ALERT: {sensor_name} Temperature above {threshold_temp}°F\nCurrent Temperature: {temp:.1f}°F\n"
+            alert_sent = True
+    # If temperature is within range and an alert was previously sent, send a notice
+    elif temp <= threshold_temp and alert_sent:
+        alert_message = f"NOTICE: {sensor_name} Temperature is now back within range at {temp:.1f}°F\n"
+        alert_sent = False
+        above_threshold_count = 0
 
-# Address for Freezer (BME280 sensor)
-address_1 = 0x77  # I2C address of the first sensor
-bus_1 = smbus2.SMBus(port)  # Create an I2C bus object
-calibration_params_1 = bme280.load_calibration_params(bus_1, address_1)  # Load calibration parameters
+    # Return the updated states and any alert message that needs to be sent
+    return alert_sent, above_threshold_count, alert_message
 
-# Address for Fridge (BME280 sensor)
-address_2 = 0x76  # I2C address of the second sensor
-bus_2 = smbus2.SMBus(port)  # Create another I2C bus object
-calibration_params_2 = bme280.load_calibration_params(bus_2, address_2)  # Load calibration parameters
+def send_slack_alert(alert_message, settings, slack_client):
+    """Sends an alert message to Slack."""
+    # Construct a message tagging the specified Slack users
+    tagged_users = " ".join(settings['SLACK_USERS_TO_TAG'])
+    combined_message_with_tags = f"{tagged_users} {alert_message}"
+    
+    try:
+        # Post the message to the specified Slack channel
+        slack_client.chat_postMessage(channel=settings['SLACK_CHANNEL'], text=combined_message_with_tags)
+    except SlackApiError as e:
+        # Log any errors that occur while posting to Slack
+        logging.error(f"Error posting message to Slack: {e}")
 
-# Initialize the Initial State streamer objects for each sensor
-streamer_1 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
-streamer_2 = Streamer(bucket_name=BUCKET_NAME, bucket_key=BUCKET_KEY, access_key=ACCESS_KEY)
+def main():
+    """Main function to run the script."""
+    # Load settings from the configuration file
+    settings = read_settings_from_conf(CONFIG_FILE)
 
-# Main loop to continuously read sensor data and perform actions
-while True:
-    # Get Data from Freezer (Sensor 1)
-    bme280data_1 = bme280.sample(bus_1, address_1, calibration_params_1)
-    humidity_1 = format(bme280data_1.humidity, ".1f")  # Format humidity value with one decimal place
-    temp_c_1 = bme280data_1.temperature
-    temp_f_1 = (temp_c_1 * 9 / 5) + 32  # Convert Celsius to Fahrenheit
+    # Initialize states for alerts and counts for freezer and fridge
+    FRIDGE_ALERT_SENT = False
+    FREEZER_ALERT_SENT = False
+    FREEZER_ABOVE_THRESHOLD_COUNT = 0
+    FRIDGE_ABOVE_THRESHOLD_COUNT = 0
 
-    # Log data to Initial State for Sensor 1
-    streamer_1.log(SENSOR_LOCATION_NAME_1 + " Temperature(F)", temp_f_1)  # Log temperature data
-    streamer_1.log(SENSOR_LOCATION_NAME_1 + " Humidity(%)", humidity_1)  # Log humidity data
-    streamer_1.flush()  # Send data to Initial State
+    # Fetch the I2C addresses for the two sensors from the settings
+    address_1 = settings['BUS_1_ADDRESS']
+    address_2 = settings['BUS_2_ADDRESS']
 
-    # Get Data from Fridge (Sensor 2)
-    bme280data_2 = bme280.sample(bus_2, address_2, calibration_params_2)
-    humidity_2 = format(bme280data_2.humidity, ".1f")  # Format humidity value with one decimal place
-    temp_c_2 = bme280data_2.temperature
-    temp_f_2 = (temp_c_2 * 9 / 5) + 32  # Convert Celsius to Fahrenheit
+    # Load calibration parameters for both sensors
+    calibration_params_1 = bme280.load_calibration_params(smbus2.SMBus(int(settings['BUS_1'])), address_1)
+    calibration_params_2 = bme280.load_calibration_params(smbus2.SMBus(int(settings['BUS_2'])), address_2)
 
-    # Log data to Initial State for Fridge (Sensor 2)
-    streamer_2.log(SENSOR_LOCATION_NAME_2 + " Temperature(F)", temp_f_2)  # Log temperature data
-    streamer_2.log(SENSOR_LOCATION_NAME_2 + " Humidity(%)", humidity_2)  # Log humidity data
-    streamer_2.flush()  # Send data to Initial State
+    # Initialize data streamers for both sensors with the specified bucket information
+    streamer_1 = Streamer(bucket_name=settings['BUCKET_NAME'], bucket_key=settings['BUCKET_KEY'], access_key=settings['ACCESS_KEY'])
+    streamer_2 = Streamer(bucket_name=settings['BUCKET_NAME'], bucket_key=settings['BUCKET_KEY'], access_key=settings['ACCESS_KEY'])
 
-    # Check if Freezer is above THRESHOLD_TEMP for THRESHOLD_COUNT consecutive MINUTES_BETWEEN_READS intervals
-    if temp_f_1 > FREEZER_THRESHOLD_TEMP:
-        FREEZER_ABOVE_THRESHOLD_COUNT += 1
-    else:
-        FREEZER_ABOVE_THRESHOLD_COUNT = 0
+    # Initialize Slack client with the provided API token
+    slack_client = WebClient(token=settings['SLACK_API_TOKEN'])
 
-    # Post Temperature to Slack for Freezer if condition is met
-    if FREEZER_ABOVE_THRESHOLD_COUNT >= THRESHOLD_COUNT:
-        freezer_alert_message = (
-            f"ALERT: {SENSOR_LOCATION_NAME_1} Temperature above {FREEZER_THRESHOLD_TEMP} for {FREEZER_ABOVE_THRESHOLD_COUNT} consecutive {THRESHOLD_COUNT} minute intervals\n"
-            f"{SENSOR_LOCATION_NAME_1} Temperature: {temp_f_1:.1f}°F\n"
-            f"{SENSOR_LOCATION_NAME_1} Humidity: {humidity_1}%\n"
-        )
+    while True:  # Infinite loop to continuously check temperatures and alert as necessary
+        # Read and log sensor data for both sensors
+        temp_1, _ = read_and_log_sensor(settings['BUS_1'], address_1, calibration_params_1, settings['SENSOR_LOCATION_NAME_1'], streamer_1)
+        temp_2, _ = read_and_log_sensor(settings['BUS_2'], address_2, calibration_params_2, settings['SENSOR_LOCATION_NAME_2'], streamer_2)
 
-    # Check if Fridge is above FRIDGE_THRESHOLD_TEMP for THRESHOLD_COUNT consecutive MINUTES_BETWEEN_READS intervals
-    if temp_f_2 > FRIDGE_THRESHOLD_TEMP:
-        FRIDGE_ABOVE_THRESHOLD_COUNT += 1
-    else:
-        FRIDGE_ABOVE_THRESHOLD_COUNT = 0
+        # Check if temperatures exceed thresholds and get any alert messages to send
+        FREEZER_ALERT_SENT, FREEZER_ABOVE_THRESHOLD_COUNT, alert_message_1 = check_threshold(temp_1, float(settings['FREEZER_THRESHOLD_TEMP']), settings['SENSOR_LOCATION_NAME_1'], FREEZER_ALERT_SENT, FREEZER_ABOVE_THRESHOLD_COUNT, settings)
+        FRIDGE_ALERT_SENT, FRIDGE_ABOVE_THRESHOLD_COUNT, alert_message_2 = check_threshold(temp_2, float(settings['FRIDGE_THRESHOLD_TEMP']), settings['SENSOR_LOCATION_NAME_2'], FRIDGE_ALERT_SENT, FRIDGE_ABOVE_THRESHOLD_COUNT, settings)
 
-    # Post Temperature to Slack for Fridge if condition is met
-    if FRIDGE_ABOVE_THRESHOLD_COUNT >= THRESHOLD_COUNT:
-        fridge_alert_message = (
-            f"ALERT: {SENSOR_LOCATION_NAME_2} Temperature above {FRIDGE_THRESHOLD_TEMP} for {FRIDGE_ABOVE_THRESHOLD_COUNT} consecutive {THRESHOLD_COUNT} minute intervals\n"
-            f"{SENSOR_LOCATION_NAME_2} Temperature: {temp_f_2:.1f}°F\n"
-            f"{SENSOR_LOCATION_NAME_2} Humidity: {humidity_2}%\n"
-        )
+        # If there are any alerts to send, send them to Slack
+        if alert_message_1:
+            send_slack_alert(alert_message_1, settings, slack_client)
+        if alert_message_2:
+            send_slack_alert(alert_message_2, settings, slack_client)
 
-    # Send combined Slack message if any of the alerts are triggered
-    if freezer_alert_message or fridge_alert_message:
-        # Create a Slack WebClient instance
-        slack_client = WebClient(token=SLACK_API_TOKEN)
-        try:
-            combined_message = freezer_alert_message + fridge_alert_message
+        # Wait for the specified duration before the next readings
+        time.sleep(int(settings['MINUTES_BETWEEN_READS']) * 60)
 
-            # Prepare the list of user IDs to tag in the message
-            tagged_users = " ".join(SLACK_USERS_TO_TAG)
-
-            # Add the tagged users to the beginning of the message
-            combined_message_with_tags = f"{tagged_users} {combined_message}"
-
-            slack_client.chat_postMessage(channel=SLACK_CHANNEL, text=combined_message_with_tags)  # Send Slack message
-        except SlackApiError as e:
-            print(f"Error posting message to Slack: {e}")  # Handle Slack API errors
-
-        # Reset alert messages
-        freezer_alert_message = ""
-        fridge_alert_message = ""
-
-    # Sleep for the specified interval before the next iteration
-    time.sleep(60 * MINUTES_BETWEEN_READS)
+if __name__ == "__main__":
+    main()  # Run the main function when the script is executed
