@@ -1,6 +1,6 @@
 # Raspberry Pi Temperature and Humidity Monitoring
 
-This guide provides detailed instructions on how to set up and utilize Python scripts to monitor temperature and humidity using BME280 sensors on a Raspberry Pi. These scripts are designed to offer comprehensive monitoring, logging, alerting via Slack, and integration with Adafruit IO for online data visualization.
+This guide provides detailed instructions on how to set up and utilize these Python scripts to monitor temperature and humidity using BME280 sensors on a Raspberry Pi. These scripts are designed to offer comprehensive monitoring, logging, alerting via Slack, and integration with Adafruit IO for online data visualization.
 
 ⚠️ Notice: Slack alerts are working, but the Slack tagged users functionality is currently experiencing issues and is not working properly. For the time being, please leave the line related to tagged users in the config file blank until the problem is resolved.
 
