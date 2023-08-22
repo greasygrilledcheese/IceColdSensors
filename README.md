@@ -12,10 +12,9 @@ This guide provides detailed instructions on how to set up and utilize these Pyt
   - [2. Create Configuration File](#2-create-configuration-file)
   - [3. Install Required Libraries](#3-install-required-libraries)
   - [4. Prepare Script](#4-prepare-script)
-  - [5. Run the Script](#5-run-the-script)
-  - [6. Logging and Alerts](#6-logging-and-alerts)
-  - [7. Monitor Through Adafruit IO](#7-monitor-through-adafruit-io)
-  - [8. Automate Script Startup (Optional)](#8-automate-script-startup-optional)
+  - [5. Logging and Alerts](#6-logging-and-alerts)
+  - [6. Monitor Through Adafruit IO](#7-monitor-through-adafruit-io)
+  - [7. Automate Script Startup (Optional)](#8-automate-script-startup-optional)
 - [Conclusion](#conclusion)
 
 ## Pre-Requisites
@@ -35,7 +34,7 @@ This guide provides detailed instructions on how to set up and utilize these Pyt
   - If you're using two sensors, set one sensor's address to 0x77 and the other's address to 0x76 by adjusting grounding the SDO pin of one of the sensors. This sensor will be addressed at 0x76.
 
 ### 2. Create Configuration File
-
+(You can use the configuration file in this repository and fill in required data, make sure it is in the same directory as the python script)
 - Create a configuration file named `IceColdSettings.conf` with the following format:
   ```ini
   [General]
@@ -64,24 +63,16 @@ This guide provides detailed instructions on how to set up and utilize these Pyt
   - If you have one sensor, save the script named `SingleSensor.py`.
   - If you have two sensors, save the script named `DualSensors.py`.
 
-### 5. Run the Script
-
-- Open a terminal and navigate to the location where you saved the script:
-  ```bash
-  python SingleSensor.py   # For one sensor
-  python DualSensors.py   # For two sensors
-  ```
-
-### 6. Logging and Alerts
+### 5. Logging and Alerts
 
 - The script logs sensor readings in the `sensor_readings.log` file and records errors in the `error_log.log` file.
 - If the temperature crosses the threshold defined in the configuration, an alert will be sent to the specified Slack channel, tagging the mentioned users.
 
-### 7. Monitor Through Adafruit IO
+### 6. Monitor Through Adafruit IO
 
 - The script sends temperature and humidity readings to Adafruit IO, allowing you to visualize the data online.
 
-### 8. Automate Script Startup (Optional)
+### 7. Automate Script Startup 
 
 To have the monitoring script start automatically on boot, follow these steps:
 
