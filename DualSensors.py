@@ -49,7 +49,8 @@ def log_to_file(sensor_name, temperature, humidity):
 settings = read_settings_from_conf('DualSensorSettings.conf')
 
 # Extract sensor and configuration data
-SENSOR_LOCATION_NAME = settings['SENSOR_LOCATION_NAME']
+SENSOR_LOCATION_NAME_1 = settings['SENSOR_LOCATION_NAME_1']
+SENSOR_LOCATION_NAME_2 = settings['SENSOR_LOCATION_NAME_2']
 MINUTES_BETWEEN_READS = settings['MINUTES_BETWEEN_READS']
 SLACK_API_TOKEN = settings['SLACK_API_TOKEN']
 SLACK_CHANNEL = settings['SLACK_CHANNEL']
@@ -80,7 +81,10 @@ adafruit_io_client = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 # Main loop for reading data, logging, and sending alerts
 while True:
     sensor_alert_messages = ["", ""]
-    for sensor_index, (address, calibration_params) in enumerate([(address_1, calibration_params_1), (address_2, calibration_params_2)]):
+    for sensor_index, (address, calibration_params, sensor_location_name) in enumerate([
+        (address_1, calibration_params_1, SENSOR_LOCATION_NAME_1),
+        (address_2, calibration_params_2, SENSOR_LOCATION_NAME_2)
+    ]):
         try:
             # Read data from the BME280 sensors
             bme280data = bme280.sample(bus_1, address, calibration_params)
@@ -89,31 +93,31 @@ while True:
             temp_f = (temp_c * 9 / 5) + 32
 
             # Log to file
-            log_to_file(f"{SENSOR_LOCATION_NAME} {sensor_index + 1}", temp_f, humidity)
+            log_to_file(sensor_location_name, temp_f, humidity)
 
             # Send temperature and humidity to Adafruit IO
-            adafruit_io_client.send(f'temperature_{sensor_index + 1}', temp_f)
-            adafruit_io_client.send(f'humidity_{sensor_index + 1}', humidity)
+            adafruit_io_client.send(f'{sensor_location_name}_temperature', temp_f)
+            adafruit_io_client.send(f'{sensor_location_name}_humidity', humidity)
 
             # Check thresholds and prepare alerts for the sensor
             if temp_f > SENSOR_THRESHOLD_TEMP:
                 SENSOR_ABOVE_THRESHOLD_COUNT[sensor_index] += 1
                 if SENSOR_ABOVE_THRESHOLD_COUNT[sensor_index] >= THRESHOLD_COUNT and not SENSOR_ALERT_SENT[sensor_index]:
                     sensor_alert_messages[sensor_index] = (
-                        f"ALERT: {SENSOR_LOCATION_NAME} {sensor_index + 1} Temperature above {SENSOR_THRESHOLD_TEMP}°F\n"
-                        f"{SENSOR_LOCATION_NAME} {sensor_index + 1} Temperature: {temp_f:.1f}°F\n"
-                        f"{SENSOR_LOCATION_NAME} {sensor_index + 1} Humidity: {humidity}%\n"
+                        f"ALERT: {sensor_location_name} Temperature above {SENSOR_THRESHOLD_TEMP}°F\n"
+                        f"{sensor_location_name} Temperature: {temp_f:.1f}°F\n"
+                        f"{sensor_location_name} Humidity: {humidity}%\n"
                     )
                     SENSOR_ALERT_SENT[sensor_index] = True
             elif temp_f <= SENSOR_THRESHOLD_TEMP and SENSOR_ALERT_SENT[sensor_index]:
                 sensor_alert_messages[sensor_index] = (
-                    f"NOTICE: {SENSOR_LOCATION_NAME} {sensor_index + 1} Temperature is now back within range at {temp_f:.1f}°F\n"
+                    f"NOTICE: {sensor_location_name} Temperature is now back within range at {temp_f:.1f}°F\n"
                 )
                 SENSOR_ALERT_SENT[sensor_index] = False
                 SENSOR_ABOVE_THRESHOLD_COUNT[sensor_index] = 0
 
         except Exception as e:
-            log_error(f"Error reading or logging data for sensor {sensor_index + 1}: {e}")
+            log_error(f"Error reading or logging data for sensor {sensor_location_name}: {e}")
 
     # Send alert messages to Slack
     for sensor_alert_message in sensor_alert_messages:
