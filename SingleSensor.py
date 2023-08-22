@@ -1,6 +1,6 @@
 # Import necessary libraries
 import time
-import smbus2
+import smbus2F
 import bme280
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -46,7 +46,7 @@ def log_to_file(sensor_name, temperature, humidity):
         file.write(f"{timestamp} - {sensor_name} - Temperature: {temperature}°F, Humidity: {humidity}%\n")
 
 # Read settings from the configuration file
-settings = read_settings_from_conf('DualSensorSettings.conf')
+settings = read_settings_from_conf('SingleSensorSettings.conf')
 
 # Extract sensor and configuration data
 SENSOR_LOCATION_NAME = settings['SENSOR_LOCATION_NAME']
