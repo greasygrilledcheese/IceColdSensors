@@ -31,7 +31,7 @@ This guide provides detailed instructions on how to set up and utilize these Pyt
   - Connect the GND pin of the sensor to the ground (GND) pin on the Raspberry Pi.
   - Connect the SDA pin of the sensor to the SDA pin on the Raspberry Pi.
   - Connect the SCL pin of the sensor to the SCL pin on the Raspberry Pi.
-  - If you're using two sensors, set one sensor's address to 0x77 and the other's address to 0x76 by adjusting grounding the SDO pin of one of the sensors. This sensor will be addressed at 0x76.
+  - If you're using two sensors, set one sensor's address to 0x77 and the other's address to 0x76 by grounding the SDO pin of one of the sensors. This sensor will be addressed at 0x76.
 
 ### 2. Create Configuration File
 (You can use the configuration file in this repository and fill in required data, make sure it is in the same directory as the python script)
