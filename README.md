@@ -35,16 +35,16 @@ This repository contains two Python scripts for monitoring temperature and humid
 2. Create a `wpa_supplicant.conf` file in the same boot partition with the following content:
 
     ```bash
-country=US
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
+    country=US
+    ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+    update_config=1
 
-network={
-ssid="WIFI_SSID"
-scan_ssid=1
-psk="WIFI_PASSWORD"
-key_mgmt=WPA-PSK
-}
+    network={
+    ssid="WIFI_SSID"
+    scan_ssid=1
+    psk="WIFI_PASSWORD"
+    key_mgmt=WPA-PSK
+    }
     ```
 
 Replace `<Your-Country-Code>`, `<Your-SSID>`, and `<Your-Password>` with your country code, WiFi name, and WiFi password, respectively.
