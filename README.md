@@ -34,7 +34,7 @@ This repository contains two Python scripts for monitoring temperature and humid
 1. Place a file named `ssh` (no extension) in the root directory of the boot partition to enable SSH.
 2. Create a `wpa_supplicant.conf` file in the same boot partition with the following content:
 
-    ```bash
+    ```
     ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
     country=US
     update_config=1
@@ -47,8 +47,6 @@ This repository contains two Python scripts for monitoring temperature and humid
     }
     ```
 
-Replace `<Your-Country-Code>`, `<Your-SSID>`, and `<Your-Password>` with your country code, WiFi name, and WiFi password, respectively.
-
 3. Insert the SD card back into the Raspberry Pi and boot it up. It should connect to the WiFi network, and SSH should be enabled.
 
 ## Hardware Setup
@@ -59,9 +57,15 @@ Replace `<Your-Country-Code>`, `<Your-SSID>`, and `<Your-Password>` with your co
 2. Navigate to `Interface Options > I2C` and enable it.
 3. Reboot your Raspberry Pi.
 
-### Connecting BME280 Sensor(s)
+### Detailed Hardware Setup for BME280 Sensor(s)
 
-- Follow the [Prerequisites](#prerequisites) section for hardware details.
+1. Power off the Raspberry Pi.
+2. Connect the `VCC` pin of the BME280 to the `3.3V` pin on the Raspberry Pi.
+3. Connect the `GND` pin of the BME280 to the `Ground` pin on the Raspberry Pi.
+4. Connect the `SDA` pin of the BME280 to the `SDA` pin (GPIO 2) on the Raspberry Pi.
+5. Connect the `SCL` pin of the BME280 to the `SCL` pin (GPIO 3) on the Raspberry Pi.
+6. If using two sensors, connect them in parallel to the same SDA and SCL lines. Ground one sensor's `SDO` pin to change its address to `0x76`.
+7. Power on the Raspberry Pi.
 
 ## Software Setup
 
@@ -102,20 +106,18 @@ Create configuration files with appropriate settings. Samples are provided in th
 3. Run the script:
 
     - For dual sensors:
-    
+
         ```bash
         python dual_sensor_script.py
         ```
-    
+
     - For a single sensor:
-    
+
         ```bash
         python single_sensor_script.py
         ```
 
 ## Start Script on Boot
-
-To make the script run automatically on boot, use `crontab`:
 
 1. Open crontab configuration:
 
@@ -131,8 +133,6 @@ To make the script run automatically on boot, use `crontab`:
     @reboot python /path/to/your/script.py &
     ```
 
-Replace `/path/to/your/script.py` with the full path to your Python script.
-
 4. Save the file and exit `nano`.
 
 ## Troubleshooting
@@ -142,5 +142,6 @@ For troubleshooting, please refer to the `Troubleshooting.md` file in this repos
 ---
 
 For more help, please open an issue in this GitHub repository.
+
 
 
