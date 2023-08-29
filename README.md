@@ -1,98 +1,101 @@
 # Raspberry Pi Temperature and Humidity Monitoring
 
-This guide provides detailed instructions on how to set up and utilize these Python scripts to monitor temperature and humidity using BME280 sensors on a Raspberry Pi. These scripts are designed to offer comprehensive monitoring, logging, alerting via Slack, and integration with Adafruit IO for online data visualization.
+This repository contains two Python scripts to monitor temperature and humidity using BME280 sensors on a Raspberry Pi. The scripts send alerts via Slack and log data to Adafruit IO.
 
-⚠️ Notice: Slack alerts are working, but the Slack tagged users functionality is currently experiencing issues and is not working properly. For the time being, please leave the line related to tagged users in the config file blank until the problem is resolved.
+- `dual_sensor_script.py`: For monitoring two BME280 sensors.
+- `single_sensor_script.py`: For monitoring a single BME280 sensor.
 
 ## Table of Contents
 
-- [Pre-Requisites](#pre-requisites)
-- [Instructions](#instructions)
-  - [1. Connect BME280 Sensor(s)](#1-connect-bme280-sensors)
-  - [2. Create Configuration File](#2-create-configuration-file)
-  - [3. Install Required Libraries](#3-install-required-libraries)
-  - [4. Prepare Script](#4-prepare-script)
-  - [5. Logging and Alerts](#6-logging-and-alerts)
-  - [6. Monitor Through Adafruit IO](#7-monitor-through-adafruit-io)
-  - [7. Automate Script Startup (Optional)](#8-automate-script-startup-optional)
-- [Conclusion](#conclusion)
+- [Prerequisites](#prerequisites)
+- [Hardware Setup](#hardware-setup)
+- [Software Setup](#software-setup)
+- [Configuration Files](#configuration-files)
+- [Adafruit IO Setup](#adafruit-io-setup)
+- [Running the Scripts](#running-the-scripts)
+- [Troubleshooting](#troubleshooting)
 
-## Pre-Requisites
+## Prerequisites
 
-- **Hardware Requirements**: Raspberry Pi Zero (with GPIO pins), one or two BME280 sensors, connecting cables.
-- **Software Requirements**: Raspberry Pi OS (Raspbian), Python installed, required Python libraries (\`smbus2\`, \`bme280\`, \`slack_sdk\`, \`Adafruit_IO\`).
+- Raspberry Pi (Any model with GPIO pins will work)
+- BME280 sensor(s)
+- Jumper wires
+- Breadboard (optional)
+- Internet connection
+- Slack Workspace
+- Adafruit IO account
 
-## Instructions
+## Hardware Setup
 
-### 1. Connect BME280 Sensor(s)
+### Enabling I2C on Raspberry Pi
 
-- Connect the BME280 sensor(s) to the Raspberry Pi as follows:
-  - Connect the VCC pin of the sensor to the 3.3V pin on the Raspberry Pi.
-  - Connect the GND pin of the sensor to the ground (GND) pin on the Raspberry Pi.
-  - Connect the SDA pin of the sensor to the SDA pin on the Raspberry Pi.
-  - Connect the SCL pin of the sensor to the SCL pin on the Raspberry Pi.
-  - If you're using two sensors, set one sensor's address to 0x77 and the other's address to 0x76 by grounding the SDO pin of one of the sensors. This sensor will be addressed at 0x76.
+1. Open the Raspberry Pi configuration menu: `sudo raspi-config`
+2. Navigate to `Interface Options > I2C` and enable it.
+3. Reboot your Raspberry Pi.
 
-### 2. Create Configuration File
-(You can use the configuration file in this repository and fill in required data, make sure it is in the same directory as the python script)
-- Create a configuration file named `IceColdSettings.conf` with the following format:
-  ```ini
-  [General]
-  SENSOR_LOCATION_NAME=Location_Name
-  MINUTES_BETWEEN_READS=5
-  SLACK_API_TOKEN=your_slack_api_token
-  SLACK_CHANNEL=channel_name
-  SLACK_USERS_TO_TAG=user1 user2
-  SENSOR_THRESHOLD_TEMP=70.0
-  THRESHOLD_COUNT=3
-  ADAFRUIT_IO_USERNAME=your_adafruit_io_username
-  ADAFRUIT_IO_KEY=your_adafruit_io_key
-  ```
-  Adjust the values according to your preferences.
+### Connecting BME280 Sensor(s)
 
-### 3. Install Required Libraries
+- Connect the `VCC` pin of the BME280 to `3.3V` on the Raspberry Pi.
+- Connect the `GND` pin to `Ground`.
+- Connect the `SDA` pin to `SDA` (GPIO 2).
+- Connect the `SCL` pin to `SCL` (GPIO 3).
 
-- Open a terminal on the Raspberry Pi and install the necessary Python libraries:
-  ```bash
-  pip install smbus2 bme280 slack-sdk Adafruit_IO
-  ```
+If you are using two BME280 sensors, you can connect them in parallel to the same SDA and SCL lines. Be sure to ground one of the sensors' `SDO` pins; this sensor will be addressed at `0x76`.
 
-### 4. Prepare Script
+## Software Setup
 
-- Choose the script that corresponds to the number of BME280 sensors you are using:
-  - If you have one sensor, save the script named `SingleSensor.py`.
-  - If you have two sensors, save the script named `DualSensors.py`.
+1. Update your Raspberry Pi: `sudo apt update && sudo apt upgrade`
+2. Install the required Python packages:
 
-### 5. Logging and Alerts
+    ```bash
+    pip install smbus2 bme280 slack_sdk Adafruit_IO
+    ```
 
-- The script logs sensor readings in the `sensor_readings.log` file and records errors in the `error_log.log` file.
-- If the temperature crosses the threshold defined in the configuration, an alert will be sent to the specified Slack channel, tagging the mentioned users.
+## Configuration Files
 
-### 6. Monitor Through Adafruit IO
+Create configuration files named `DualSensorSettings.conf` and `SingleSensorSettings.conf` with appropriate settings. Samples are provided in the repository.
 
-- The script sends temperature and humidity readings to Adafruit IO, allowing you to visualize the data online.
+## Adafruit IO Setup
 
-### 7. Automate Script Startup 
+1. Log in to your Adafruit IO account or create one if you don't have it.
+2. Navigate to `Dashboards` and create a new dashboard for your sensors.
+3. Add blocks (e.g., gauge, chart) to your dashboard.
+4. Go to `Feeds` and create new feeds for temperature and humidity.
+5. Make sure to update the `ADAFRUIT_IO_USERNAME`, `ADAFRUIT_IO_KEY`, `ADAFRUIT_IO_GROUP_NAME`, `ADAFRUIT_IO_TEMP_FEED`, and `ADAFRUIT_IO_HUMIDITY_FEED` in your configuration files to match your Adafruit IO setup.
 
-To have the monitoring script start automatically on boot, follow these steps:
+## Running the Scripts
 
-- Open a terminal on your Raspberry Pi Zero.
-- Open the crontab configuration using the nano text editor (if prompted, choose nano`):
-  ```bash
-  crontab -e
-  ```
-- Add the following line to the crontab file to run the script on boot:
-  ```bash
-  @reboot nohup python3 /path/to/your/script.py
-  ```
-  Replace `/path/to/your/script.py` with the actual path to your monitoring script.
-- Save the file and exit the text editor.
-- The script will now run automatically every time your Raspberry Pi Zero boots up.
-  
-## Conclusion
+1. Clone this repository:
 
-These scripts offer a comprehensive solution for monitoring temperature and humidity using BME280 sensors and a Raspberry Pi. Ensure correct connections, configure the settings, and run the script to initiate monitoring. 
+    ```bash
+    git clone <repository_url>
+    ```
 
+2. Navigate into the directory:
 
+    ```bash
+    cd <repository_directory>
+    ```
 
+3. Run the script:
 
+    - For dual sensors:
+    
+        ```bash
+        python dual_sensor_script.py
+        ```
+    
+    - For a single sensor:
+    
+        ```bash
+        python single_sensor_script.py
+        ```
+
+## Troubleshooting
+
+- Make sure I2C is enabled and that the sensor is correctly connected.
+- Check the log files `sensor_readings.log` and `error_log.log` for debugging information.
+
+---
+
+For more help, please open an issue in this GitHub repository.
