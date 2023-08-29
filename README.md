@@ -1,6 +1,6 @@
 # Raspberry Pi Temperature and Humidity Monitoring
 
-This repository contains two Python scripts to monitor temperature and humidity using BME280 sensors on a Raspberry Pi. The scripts send alerts via Slack and log data to Adafruit IO.
+This repository contains two Python scripts for monitoring temperature and humidity using BME280 sensors on a Raspberry Pi. The scripts send alerts via Slack and log data to Adafruit IO.
 
 - `dual_sensor_script.py`: For monitoring two BME280 sensors.
 - `single_sensor_script.py`: For monitoring a single BME280 sensor.
@@ -8,11 +8,13 @@ This repository contains two Python scripts to monitor temperature and humidity 
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
+- [Initial Setup](#initial-setup)
 - [Hardware Setup](#hardware-setup)
 - [Software Setup](#software-setup)
 - [Configuration Files](#configuration-files)
 - [Adafruit IO Setup](#adafruit-io-setup)
 - [Running the Scripts](#running-the-scripts)
+- [Start Script on Boot](#start-script-on-boot)
 - [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
@@ -25,6 +27,27 @@ This repository contains two Python scripts to monitor temperature and humidity 
 - Slack Workspace
 - Adafruit IO account
 
+## Initial Setup
+
+### Enable SSH and WiFi
+
+1. Place a file named `ssh` (no extension) in the root directory of the boot partition to enable SSH.
+2. Create a `wpa_supplicant.conf` file in the same boot partition with the following content:
+
+    ```bash
+    ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+    update_config=1
+    country=<Your-Country-Code>
+
+    network={
+        ssid="<Your-SSID>"
+        psk="<Your-Password>"
+    }
+    ```
+Replace `<Your-Country-Code>`, `<Your-SSID>`, and `<Your-Password>` with your country code, WiFi name, and WiFi password, respectively.
+
+3. Insert the SD card back into the Raspberry Pi and boot it up. It should connect to the WiFi network, and SSH should be enabled.
+
 ## Hardware Setup
 
 ### Enabling I2C on Raspberry Pi
@@ -35,12 +58,7 @@ This repository contains two Python scripts to monitor temperature and humidity 
 
 ### Connecting BME280 Sensor(s)
 
-- Connect the `VCC` pin of the BME280 to `3.3V` on the Raspberry Pi.
-- Connect the `GND` pin to `Ground`.
-- Connect the `SDA` pin to `SDA` (GPIO 2).
-- Connect the `SCL` pin to `SCL` (GPIO 3).
-
-If you are using two BME280 sensors, you can connect them in parallel to the same SDA and SCL lines. Be sure to ground one of the sensors' `SDO` pins; this sensor will be addressed at `0x76`.
+- Follow the [Prerequisites](#prerequisites) section for hardware details.
 
 ## Software Setup
 
@@ -53,15 +71,11 @@ If you are using two BME280 sensors, you can connect them in parallel to the sam
 
 ## Configuration Files
 
-Create configuration files named `DualSensorSettings.conf` and `SingleSensorSettings.conf` with appropriate settings. Samples are provided in the repository.
+Create configuration files with appropriate settings. Samples are provided in the repository.
 
 ## Adafruit IO Setup
 
-1. Log in to your Adafruit IO account or create one if you don't have it.
-2. Navigate to `Dashboards` and create a new dashboard for your sensors.
-3. Add blocks (e.g., gauge, chart) to your dashboard.
-4. Go to `Feeds` and create new feeds for temperature and humidity.
-5. Make sure to update the `ADAFRUIT_IO_USERNAME`, `ADAFRUIT_IO_KEY`, `ADAFRUIT_IO_GROUP_NAME`, `ADAFRUIT_IO_TEMP_FEED`, and `ADAFRUIT_IO_HUMIDITY_FEED` in your configuration files to match your Adafruit IO setup.
+Follow the steps outlined in the [Adafruit IO Setup](#adafruit-io-setup) section.
 
 ## Running the Scripts
 
@@ -91,11 +105,33 @@ Create configuration files named `DualSensorSettings.conf` and `SingleSensorSett
         python single_sensor_script.py
         ```
 
+## Start Script on Boot
+
+To make the script run automatically on boot, use `crontab`:
+
+1. Open crontab configuration:
+
+    ```bash
+    crontab -e
+    ```
+
+2. Choose `nano` as the editor if prompted.
+
+3. Add the following line at the end of the file:
+
+    ```bash
+    @reboot python /path/to/your/script.py &
+    ```
+
+Replace `/path/to/your/script.py` with the full path to your Python script.
+
+4. Save the file and exit `nano`.
+
 ## Troubleshooting
 
-- Make sure I2C is enabled and that the sensor is correctly connected.
-- Check the log files `sensor_readings.log` and `error_log.log` for debugging information.
+For troubleshooting, please refer to the `Troubleshooting.md` file in this repository.
 
 ---
 
 For more help, please open an issue in this GitHub repository.
+
