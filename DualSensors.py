@@ -16,11 +16,13 @@ def read_settings_from_conf(conf_file):
     config = configparser.ConfigParser()
     config.read(conf_file)
     settings = {}
-    for key in ['SENSOR_LOCATION_NAME', 'MINUTES_BETWEEN_READS', 'SLACK_API_TOKEN',
-                'SLACK_CHANNEL', 'SLACK_USERS_TO_TAG', 'SENSOR_THRESHOLD_TEMP',
-                'THRESHOLD_COUNT', 'ADAFRUIT_IO_USERNAME', 'ADAFRUIT_IO_KEY']:
+    keys = ['SENSOR_LOCATION_NAME_1', 'SENSOR_LOCATION_NAME_2', 'MINUTES_BETWEEN_READS',
+            'SLACK_API_TOKEN', 'SLACK_CHANNEL', 'SLACK_USERS_TO_TAG', 'SENSOR_THRESHOLD_TEMP_1',
+            'SENSOR_THRESHOLD_TEMP_2', 'THRESHOLD_COUNT', 'ADAFRUIT_IO_USERNAME', 'ADAFRUIT_IO_KEY',
+            'ADAFRUIT_IO_GROUP_NAME']
+    for key in keys:
         try:
-            if key in ['SENSOR_THRESHOLD_TEMP']:
+            if key in ['SENSOR_THRESHOLD_TEMP_1', 'SENSOR_THRESHOLD_TEMP_2']:
                 settings[key] = config.getfloat('General', key)
             elif key in ['MINUTES_BETWEEN_READS', 'THRESHOLD_COUNT']:
                 settings[key] = config.getint('General', key)
@@ -48,17 +50,9 @@ def log_to_file(sensor_name, temperature, humidity):
 # Read settings from the configuration file
 settings = read_settings_from_conf('DualSensorSettings.conf')
 
-# Extract sensor and configuration data
-SENSOR_LOCATION_NAME_1 = settings['SENSOR_LOCATION_NAME_1']
-SENSOR_LOCATION_NAME_2 = settings['SENSOR_LOCATION_NAME_2']
-MINUTES_BETWEEN_READS = settings['MINUTES_BETWEEN_READS']
-SLACK_API_TOKEN = settings['SLACK_API_TOKEN']
-SLACK_CHANNEL = settings['SLACK_CHANNEL']
-SLACK_USERS_TO_TAG = settings['SLACK_USERS_TO_TAG']
-SENSOR_THRESHOLD_TEMP = settings['SENSOR_THRESHOLD_TEMP']
-THRESHOLD_COUNT = settings['THRESHOLD_COUNT']
-ADAFRUIT_IO_USERNAME = settings['ADAFRUIT_IO_USERNAME']
-ADAFRUIT_IO_KEY = settings['ADAFRUIT_IO_KEY']
+# Extract settings
+for key, value in settings.items():
+    globals()[key] = value
 
 # Initialize threshold counters and alert flags
 SENSOR_ABOVE_THRESHOLD_COUNT = [0, 0]
@@ -81,9 +75,9 @@ adafruit_io_client = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 # Main loop for reading data, logging, and sending alerts
 while True:
     sensor_alert_messages = ["", ""]
-    for sensor_index, (address, calibration_params, sensor_location_name) in enumerate([
-        (address_1, calibration_params_1, SENSOR_LOCATION_NAME_1),
-        (address_2, calibration_params_2, SENSOR_LOCATION_NAME_2)
+    for sensor_index, (address, calibration_params, sensor_location_name, threshold_temp) in enumerate([
+        (address_1, calibration_params_1, SENSOR_LOCATION_NAME_1, SENSOR_THRESHOLD_TEMP_1),
+        (address_2, calibration_params_2, SENSOR_LOCATION_NAME_2, SENSOR_THRESHOLD_TEMP_2)
     ]):
         try:
             # Read data from the BME280 sensors
@@ -91,25 +85,23 @@ while True:
             humidity = format(bme280data.humidity, ".1f")
             temp_c = bme280data.temperature
             temp_f = (temp_c * 9 / 5) + 32
-
-            # Log to file
             log_to_file(sensor_location_name, temp_f, humidity)
 
             # Send temperature and humidity to Adafruit IO
-            adafruit_io_client.send(f'{sensor_location_name}_temperature', temp_f)
-            adafruit_io_client.send(f'{sensor_location_name}_humidity', humidity)
+            adafruit_io_client.send(f'{ADAFRUIT_IO_GROUP_NAME}.{sensor_location_name}_temperature', temp_f)
+            adafruit_io_client.send(f'{ADAFRUIT_IO_GROUP_NAME}.{sensor_location_name}_humidity', humidity)
 
             # Check thresholds and prepare alerts for the sensor
-            if temp_f > SENSOR_THRESHOLD_TEMP:
+            if temp_f > threshold_temp:
                 SENSOR_ABOVE_THRESHOLD_COUNT[sensor_index] += 1
                 if SENSOR_ABOVE_THRESHOLD_COUNT[sensor_index] >= THRESHOLD_COUNT and not SENSOR_ALERT_SENT[sensor_index]:
                     sensor_alert_messages[sensor_index] = (
-                        f"ALERT: {sensor_location_name} Temperature above {SENSOR_THRESHOLD_TEMP}°F\n"
+                        f"ALERT: {sensor_location_name} Temperature above {threshold_temp}°F\n"
                         f"{sensor_location_name} Temperature: {temp_f:.1f}°F\n"
                         f"{sensor_location_name} Humidity: {humidity}%\n"
                     )
                     SENSOR_ALERT_SENT[sensor_index] = True
-            elif temp_f <= SENSOR_THRESHOLD_TEMP and SENSOR_ALERT_SENT[sensor_index]:
+            elif temp_f <= threshold_temp and SENSOR_ALERT_SENT[sensor_index]:
                 sensor_alert_messages[sensor_index] = (
                     f"NOTICE: {sensor_location_name} Temperature is now back within range at {temp_f:.1f}°F\n"
                 )
