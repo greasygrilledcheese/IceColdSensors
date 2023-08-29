@@ -44,6 +44,7 @@ This repository contains two Python scripts for monitoring temperature and humid
         psk="<Your-Password>"
     }
     ```
+
 Replace `<Your-Country-Code>`, `<Your-SSID>`, and `<Your-Password>` with your country code, WiFi name, and WiFi password, respectively.
 
 3. Insert the SD card back into the Raspberry Pi and boot it up. It should connect to the WiFi network, and SSH should be enabled.
@@ -75,7 +76,12 @@ Create configuration files with appropriate settings. Samples are provided in th
 
 ## Adafruit IO Setup
 
-Follow the steps outlined in the [Adafruit IO Setup](#adafruit-io-setup) section.
+1. Log in to your Adafruit IO account or create one if you don't have it.
+2. Navigate to `Dashboards` and create a new dashboard for your sensors.
+3. Add blocks (e.g., gauge, chart) to your dashboard.
+4. Go to `Feeds` and create new feeds for temperature and humidity.
+5. Place these feeds into a **group**.
+6. Make sure to update the `ADAFRUIT_IO_USERNAME`, `ADAFRUIT_IO_KEY`, `ADAFRUIT_IO_GROUP_NAME`, `ADAFRUIT_IO_TEMP_FEED`, and `ADAFRUIT_IO_HUMIDITY_FEED` in your configuration files to match your Adafruit IO setup.
 
 ## Running the Scripts
 
@@ -134,4 +140,5 @@ For troubleshooting, please refer to the `Troubleshooting.md` file in this repos
 ---
 
 For more help, please open an issue in this GitHub repository.
+
 
